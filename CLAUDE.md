@@ -71,6 +71,11 @@ publish `target/release/whoopy` as the asset `whoopy-aarch64-linux` of a
 release `whoopy-<version>`, then put its url and `sha256sum` in the
 manifest. The toolchain is rustup's, pinned by `whoopy/rust-toolchain.toml`.
 
+The wake playtests (T-P-4, T-W-1, T-W-2) run on the server against the
+installed app: `tests/wake-playtest.sh <ssh alias of the Ollama machine> ollama/<chat model>`.
+Lower froaky's idle time there first (`froaky settings --idle 2m`), and put
+it back after (30 min).
+
 Set config panel values from the command line one key at a time:
 `yunohost app config set whoopy main.wol.wol_mac -v <value>`.
 
