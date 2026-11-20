@@ -66,8 +66,8 @@ ram.runtime = "1G"
     # The wake daemon and its CLI, built from whoopy/ and published as a
     # release asset of this repository: install never compiles.
     [resources.sources.whoopy]
-    arm64.url = "https://github.com/gigaturbo/whoopy_ynh/releases/download/whoopy-0.1.0/whoopy-aarch64-linux"
-    arm64.sha256 = "a446adb9b433b8df3bad7f28ca60dd11782a04ba18a14e5b40601675cbf1d100"
+    arm64.url = "https://github.com/gigaturbo/whoopy_ynh/releases/download/whoopy-0.2.0/whoopy-aarch64-linux"
+    arm64.sha256 = "df813c4575880e31c4a5c9dd68c8e114b1dee4a3de6b87461ff18f0ff97a5068"
     extract = false
     rename = "whoopy"
 
