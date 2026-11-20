@@ -96,7 +96,8 @@ server and downloaded at install from a release asset (0.1.0~ynh1).
 
 Release `whoopy-0.1.0` published and the server upgraded 2026-11-20: both
 services up, `/mcp/whoopy` 401 without a key, three tools listed with one.
-**Left:** T-W-1, T-W-2, T-P-3, T-P-4, T-M-8.
+**Left:** T-W-1, T-W-2, T-P-4, all three waiting on the desktop, which
+hung in its own suspend on 2026-11-20 and needs a power cycle.
 
 ## Tests
 
@@ -110,24 +111,20 @@ woke it and answered in 27.4 s; it suspended by itself about 30 min later.
 **Do:** the same with 0.1.0~ynh1. **Pass:** the same, and `journalctl -u
 whoopy-wake` shows the one wake.
 
+Tried 2026-11-20: the desktop woke from its first idle suspend with no
+packet from Whoopy, then hung in the NVIDIA resume (PID 1 in D state); a
+forced reboot hung too. Not Whoopy's fault; rerun after a power cycle.
+
 ### T-W-2 · a wake that gets no answer fails with a 503 after the timeout
 
 `todo` `playtest` `filed 2026-11-19` `needs: F-P-6`
 
 Reopened 2026-11-20 (F-P-6). Last result: 2026-11-19 at `12f6a85`, with a
 made-up MAC a chat request got a 503 after 121.9 s (`wake_timeout_s` 120).
-**Do:** the same with 0.1.0~ynh1, then restore the real MAC. **Pass:** a 503
+**Do:** the same with 0.1.0~ynh1 and `wake_timeout_s` 100, then restore
+the real MAC. **Pass:** a 503
 whose message names the timeout, and a second request within 15 s fails at
 once.
-
-### T-P-3 · backup and restore keep tokens and stored provider keys
-
-`todo` `playtest` `filed 2026-11-19` `needs: F-P-6`
-
-Reopened 2026-11-20: a second unit and the MCP token join the backup
-(F-P-6). Last result: 2026-11-19 at `12f6a85`, all passed (78 s down).
-**Do:** the same with 0.1.0~ynh1. **Pass:** as before, plus both services up
-after the restore and `/mcp/whoopy` answering with the same token.
 
 ### T-P-4 · the panel's Wake button and status line use the daemon
 
@@ -138,14 +135,11 @@ after the restore and `/mcp/whoopy` answering with the same token.
 time; the button reports "Ollama answers, N s after the wake request". With
 `whoopy-wake` stopped, the status line says the daemon does not answer.
 
-### T-M-8 · `/mcp/whoopy` through Whoopy
-
-`todo` `playtest` `filed 2026-11-20` `needs: F-P-6`
-
-**Do:** list and call the tools at `/mcp/whoopy` without a token, with a
-Whoopy token, and call the daemon's loopback port without its token.
-**Pass:** 401 without a token and no portal redirect; with one, `wake`,
-`status`, `models` listed and each answers; the loopback call refused.
+Partly passed 2026-11-20 at `d9779d4`, from the command line (`app config
+get`, `app action run`), desktop awake: the status line read awake; Wake now
+answered "Ollama answers, 0 s after the wake request" in 2 s; with
+`whoopy-wake` stopped the status line named the daemon. **Left:** the asleep
+reading and a real wake from the button.
 
 ### T-M-1 · the compact format packs to Tandoor's JSON
 
@@ -185,6 +179,8 @@ the result is to the house rules.
 
 ## Closed
 
+- `T-M-8` done `playtest` 2026-11-20 at `d9779d4` · `/mcp/whoopy`: 401 without a token and no portal redirect; with the master key `whoopy-wake`, `whoopy-status`, `whoopy-models` listed and each answered in under 0.2 s; the daemon's loopback port 401 without its token
+- `T-P-3` done `playtest` 2026-11-20 at `d9779d4` · backup, remove, restore: 91 s down, both services up, the 18 keys, master key and MCP token identical (fingerprints), `/v1/models` and `/mcp/whoopy` answer; no stored credential or model in the database to compare
 - `F-P-4` done 2026-11-19 · the redrawn icon set from ynh-app-icons 0ca6205: `conf/logo.png`, the six favicons in `conf/icons/` and `doc/logo.svg` replaced, `logo_update/` deleted (~ynh13)
 - `F-P-3` done 2026-11-19 · the desktop's embedding models as `ollama-embed/<name>`, LiteLLM's `ollama` provider at Ollama's address (~ynh12, upgraded 2026-11-19): `ollama/<name>` answered 400 to an embedding; through the new route 768 dimensions in 4 s, and cheruby-docs-mcp indexed 333 files in 3 min 47 s with it
 - `F-M-8` done 2026-11-10 · the side apps are reached by an address and a password-type token pasted in the panel, never by reading their settings (~ynh9); documents are one `docs` server at `/mcp/docs` whose id stays that of `docs_<user>`, so grants carried over; Rikka Hub reached it with its ordinary key once `_<user>` was dropped from its URL; `/mcp/web` and `embeddinggemma` answer
