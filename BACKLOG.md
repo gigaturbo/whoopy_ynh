@@ -85,7 +85,7 @@ Two ways, to be chosen:
 
 ### F-P-6 · the wake moves into a Rust daemon with an MCP server
 
-`doing` `large` `filed 2026-11-20`
+`testing` `large` `filed 2026-11-20`
 
 The wake logic, the panel's Wake button and a small MCP server move into one
 binary, `whoopy/`, run as `whoopy-wake.service` beside LiteLLM, which stays
@@ -94,8 +94,9 @@ the panel and an agent share one wake. Tools at `/mcp/whoopy`: `wake`,
 `status`, `models`, none taking an argument. The binary is built on the
 server and downloaded at install from a release asset (0.1.0~ynh1).
 
-**Left:** publish release `whoopy-0.1.0` (ask first), its sha256 in the
-manifest, the upgrade (ask first), then T-W-1, T-W-2, T-P-3, T-P-4, T-M-8.
+Release `whoopy-0.1.0` published and the server upgraded 2026-11-20: both
+services up, `/mcp/whoopy` 401 without a key, three tools listed with one.
+**Left:** T-W-1, T-W-2, T-P-3, T-P-4, T-M-8.
 
 ## Tests
 
