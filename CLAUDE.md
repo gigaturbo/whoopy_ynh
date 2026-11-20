@@ -20,6 +20,7 @@ upgrading this app touches a running service and a database, so ask first.
 - `conf/whoopy_wake.py`: the hook LiteLLM loads; asks the wake daemon.
 - `whoopy/`: the wake daemon and its CLI, in Rust. `conf/wake.service`
   and `conf/wake.env` (root 600, wake settings and MCP token only) run it.
+- `conf/index.html`: the status page at `/`, served by the wake daemon.
 - `conf/logo.png`: the portal tile and LiteLLM's logo. `conf/icons/`: browser
   favicons, served by nginx. `doc/logo.svg`: the README.
 
@@ -31,6 +32,12 @@ upgrading this app touches a running service and a database, so ask first.
   the socket `/run/whoopy/wake.sock` and an MCP server on loopback
   (`port_mcp`), registered in LiteLLM as `whoopy`, at `/mcp/whoopy`. It
   never reaches the internet, whatever the outbound setting.
+- **`/` is Whoopy's status page**, not LiteLLM's: the daemon serves it on a
+  third loopback port (`port_web`), reading `conf/index.html` from
+  `web/` at each request, with `/whoopy/status` and `/whoopy/wake` (which
+  needs the header `X-Whoopy: 1`). Its tabs link to `/ui/` and `/docs`,
+  where `DOCS_URL` moved LiteLLM's Swagger. Preview it with
+  `whoopy serve` and `WHOOPY_WEB_PORT`, `WHOOPY_WEB_PAGE`: no portal there.
 - **Code** in `/var/www/whoopy`, root-owned, group `whoopy` read-only: venv,
   `prisma/` (CLI, query engine, schema engine), `config/` (config.yaml and the
   hook, which LiteLLM loads from the config's directory).

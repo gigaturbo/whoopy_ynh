@@ -171,6 +171,10 @@ whoopy_configure() {
     cp "$YNH_APP_BASEDIR"/conf/icons/* "$install_dir/icons/"
     cp "$YNH_APP_BASEDIR/conf/logo.png" "$install_dir/icons/whoopy.png"
 
+    # The status page, which the wake daemon reads at each request.
+    mkdir -p "$install_dir/web"
+    cp "$YNH_APP_BASEDIR/conf/index.html" "$install_dir/web/index.html"
+
     chown -R root:"$app" "$install_dir"
     chmod -R u=rwX,g=rX,o= "$install_dir"
     chmod 600 "$install_dir/whoopy.env" "$install_dir/wake.env"
@@ -207,6 +211,9 @@ whoopy_start() {
     # The wait above only warns. Without the daemon every Ollama request fails.
     timeout 5 "$install_dir/bin/whoopy" --socket "/run/$app/wake.sock" status >/dev/null \
         || ynh_die "The wake daemon did not start: systemctl status $app-wake"
+    # An older binary starts fine but serves no page: / would answer 502.
+    curl -fsS -o /dev/null --max-time 5 "http://127.0.0.1:$port_web/whoopy/status" \
+        || ynh_die "The status page did not start: systemctl status $app-wake"
     # The first start replays every database migration: allow for it.
     ynh_systemctl --service="$app" --action="restart" --log_path="systemd" \
         --wait_until="Uvicorn running on" --timeout=900

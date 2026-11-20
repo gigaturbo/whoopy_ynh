@@ -83,6 +83,18 @@ Two ways, to be chosen:
   wake hook and MCP. 1.109 adds more MCP fixes, a chat page and
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
+### F-P-7 · Whoopy's own status page at `/`
+
+`doing` `medium` `filed 2026-11-20`
+
+`/` was LiteLLM's Swagger page, which says nothing about the Ollama machine.
+The wake daemon now serves a page there: awake, waking or asleep, whether
+requests wake it, the last wake, and a Wake button. Tabs link to `/ui/` and to
+`/docs`, where `DOCS_URL` moves Swagger. Links, not frames: LiteLLM's
+`X-Frame-Options: DENY` stays. Previewed with Playwright on a local daemon
+(light and dark, awake, asleep, a failed wake; a POST without `X-Whoopy` 403).
+Release `whoopy-0.2.0` and the upgrade remain.
+
 ## Tests
 
 ### T-M-1 · the compact format packs to Tandoor's JSON
@@ -120,6 +132,16 @@ listed and a search works; the bare call refused; no wake packet in
 0.11.3 (External Tools, Streamable HTTP) each add one recipe from a URL.
 **Pass:** both succeed; record how each passes the Whoopy token and how close
 the result is to the house rules.
+
+### T-P-5 · the status page through the domain
+
+`todo` `playtest` `filed 2026-11-20` `needs: F-P-7`
+
+**Do:** after the upgrade, open `https://ai.gigaturbo.fr/` logged out, then
+as an admin; press Wake with the desktop asleep; follow both tabs; call
+`/v1/models` with a key. **Pass:** logged out goes to the portal login; as an
+admin the page shows the real state and the wake ends "Awake after N s";
+Admin opens LiteLLM's page, API docs opens Swagger; `/v1/models` answers 200.
 
 ## Closed
 

@@ -67,6 +67,12 @@ struct ServeArgs {
     /// from WHOOPY_MCP_TOKEN only, never from the command line.
     #[arg(long, env = "WHOOPY_MCP_PORT")]
     mcp_port: Option<u16>,
+    /// The status page's loopback port; none without it.
+    #[arg(long, env = "WHOOPY_WEB_PORT", requires = "web_page")]
+    web_port: Option<u16>,
+    /// The status page's HTML, read at each request.
+    #[arg(long, env = "WHOOPY_WEB_PAGE")]
+    web_page: Option<PathBuf>,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -105,7 +111,11 @@ async fn serve(args: ServeArgs, socket: &Path) -> Result<(), String> {
         args.wol_enabled == "1",
         Duration::from_secs(args.wake_timeout_s),
     );
-    serve::run(waker, socket, mcp).await
+    let web = args
+        .web_port
+        .zip(args.web_page)
+        .map(|(port, page)| serve::Web { port, page });
+    serve::run(waker, socket, mcp, web).await
 }
 
 async fn wake(socket: &Path) -> Result<(), String> {

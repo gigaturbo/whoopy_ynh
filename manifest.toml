@@ -7,7 +7,7 @@ name = "Whoopy"
 description.en = "One authenticated AI endpoint in front of an Ollama that sleeps, woken on demand"
 description.fr = "Un point d'accès IA authentifié devant un Ollama qui dort, réveillé à la demande"
 
-version = "0.1.0~ynh1"
+version = "0.2.0~ynh1"
 
 maintainers = ["gigaturbo"]
 
@@ -34,7 +34,7 @@ ram.runtime = "1G"
     type = "domain"
 
     [install.init_main_permission]
-    help.en = "Who may open the admin page. Behind it, LiteLLM asks for its own admin password."
+    help.en = "Who may open the status page and its Wake button. LiteLLM's admin page behind it asks for its own admin password."
     type = "group"
     default = "admins"
 
@@ -87,6 +87,8 @@ ram.runtime = "1G"
     main.default = 4000
     # The wake daemon's MCP server, on loopback, reached through LiteLLM.
     mcp.default = 8790
+    # The status page, on loopback, proxied by nginx at / and /whoopy/.
+    web.default = 8791
 
     # Prisma, LiteLLM's database layer, runs its command-line tool on Node.
     # 5.17 predates Node 24.

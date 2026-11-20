@@ -1,18 +1,29 @@
-//! The daemon: the wake socket for the LiteLLM hook and the CLI, and the MCP
-//! server on loopback.
+//! The daemon: the wake socket for the LiteLLM hook and the CLI, the MCP
+//! server on loopback, and the status page on loopback.
 //!
 //! Socket routes, all JSON:
 //!   POST /ensure  a request is about to reach Ollama; wakes only if enabled
 //!   POST /wake    a wake asked for by hand; runs even when disabled
 //!   GET  /status  awake or not, waking, the last wake
 //! /ensure and /wake answer 200 once Ollama answers, 503 when the wake fails.
+//!
+//! Page routes, behind the portal's admin permission through nginx:
+//!   GET  /               the page (WHOOPY_WEB_PAGE)
+//!   GET  /whoopy/status  as the socket's /status
+//!   POST /whoopy/wake    as the socket's /wake; needs the header X-Whoopy: 1
 
-use std::{os::unix::fs::PermissionsExt, path::Path, sync::Arc};
+use std::{
+    future::IntoFuture,
+    io,
+    os::unix::fs::PermissionsExt,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use axum::{
     Json, Router,
     extract::{Request, State},
-    http::{StatusCode, header},
+    http::{HeaderMap, StatusCode, header},
     middleware::{self, Next},
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -39,7 +50,17 @@ pub struct Mcp {
     pub token: String,
 }
 
-pub async fn run(waker: Shared, socket: &Path, mcp: Option<Mcp>) -> Result<(), String> {
+pub struct Web {
+    pub port: u16,
+    pub page: PathBuf,
+}
+
+pub async fn run(
+    waker: Shared,
+    socket: &Path,
+    mcp: Option<Mcp>,
+    web: Option<Web>,
+) -> Result<(), String> {
     if mcp.as_ref().is_some_and(|m| m.token.len() < MIN_TOKEN_LEN) {
         return Err(format!(
             "WHOOPY_MCP_TOKEN must hold at least {MIN_TOKEN_LEN} characters"
@@ -59,37 +80,72 @@ pub async fn run(waker: Shared, socket: &Path, mcp: Option<Mcp>) -> Result<(), S
         .with_state(Arc::clone(&waker));
     let local = axum::serve(unix, local).with_graceful_shutdown(shutdown());
 
-    let Some(Mcp { port, token }) = mcp else {
-        eprintln!("whoopy: wake socket at {}, no MCP server", socket.display());
-        return local.await.map_err(|e| e.to_string());
+    // "whoopy: wake socket at" is what whoopy_start waits for in the log.
+    let mut started = format!("whoopy: wake socket at {}", socket.display());
+
+    let remote = match mcp {
+        None => None,
+        Some(Mcp { port, token }) => {
+            let tools = Tools {
+                waker: Arc::clone(&waker),
+            };
+            // Stateless and JSON: a restart leaves no session for a client to trip on.
+            let config = StreamableHttpServerConfig::default()
+                .with_legacy_session_mode(false)
+                .with_json_response(true)
+                .with_sse_keep_alive(None);
+            let service = StreamableHttpService::new(
+                move || Ok(tools.clone()),
+                Arc::new(LocalSessionManager::default()),
+                config,
+            );
+            let token: Arc<str> = token.into();
+            let app = Router::new()
+                .nest_service("/mcp", service)
+                .layer(middleware::from_fn_with_state(token, require_token));
+            started += &format!(", MCP at http://127.0.0.1:{port}/mcp");
+            Some(serve_tcp(port, app).await?)
+        }
     };
 
-    let tools = Tools { waker };
-    // Stateless and JSON: a restart leaves no session for a client to trip on.
-    let config = StreamableHttpServerConfig::default()
-        .with_legacy_session_mode(false)
-        .with_json_response(true)
-        .with_sse_keep_alive(None);
-    let service = StreamableHttpService::new(
-        move || Ok(tools.clone()),
-        Arc::new(LocalSessionManager::default()),
-        config,
-    );
-    let token: Arc<str> = token.into();
-    let app = Router::new()
-        .nest_service("/mcp", service)
-        .layer(middleware::from_fn_with_state(token, require_token));
+    let page = match web {
+        None => None,
+        Some(Web { port, page }) => {
+            let page: Arc<Path> = page.into();
+            let app = Router::new()
+                .route("/", get(move || send_page(Arc::clone(&page))))
+                .route("/whoopy/status", get(status))
+                .route(
+                    "/whoopy/wake",
+                    post(wake).layer(middleware::from_fn(require_page_header)),
+                )
+                .with_state(Arc::clone(&waker));
+            started += &format!(", page at http://127.0.0.1:{port}/");
+            Some(serve_tcp(port, app).await?)
+        }
+    };
+
+    eprintln!("{started}");
+    let (a, b, c) = tokio::join!(local, run_some(remote), run_some(page));
+    a.and(b).and(c).map_err(|e| e.to_string())
+}
+
+/// Binds a loopback port; the server runs once awaited.
+async fn serve_tcp(
+    port: u16,
+    app: Router,
+) -> Result<impl IntoFuture<Output = io::Result<()>>, String> {
     let tcp = TcpListener::bind(("127.0.0.1", port))
         .await
         .map_err(|e| format!("port {port}: {e}"))?;
-    eprintln!(
-        "whoopy: wake socket at {}, MCP at http://127.0.0.1:{port}/mcp",
-        socket.display()
-    );
-    let remote = axum::serve(tcp, app).with_graceful_shutdown(shutdown());
+    Ok(axum::serve(tcp, app).with_graceful_shutdown(shutdown()))
+}
 
-    let (a, b) = tokio::join!(local, remote);
-    a.and(b).map_err(|e| e.to_string())
+async fn run_some(server: Option<impl IntoFuture<Output = io::Result<()>>>) -> io::Result<()> {
+    match server {
+        Some(s) => s.await,
+        None => Ok(()),
+    }
 }
 
 /// Waits for SIGTERM or Ctrl-C. In-flight wakes are not waited for long:
@@ -115,6 +171,39 @@ async fn require_token(State(token): State<Arc<str>>, req: Request, next: Next) 
         return StatusCode::UNAUTHORIZED.into_response();
     }
     next.run(req).await
+}
+
+/// A browser sends a custom header only from a script on the same origin:
+/// a form on another site cannot wake the desktop with the admin's session.
+fn from_page(headers: &HeaderMap) -> bool {
+    headers.get("x-whoopy").is_some_and(|v| v == "1")
+}
+
+async fn require_page_header(req: Request, next: Next) -> Response {
+    if !from_page(req.headers()) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    next.run(req).await
+}
+
+/// Read at each request, so a package upgrade changes it without a restart.
+async fn send_page(path: Arc<Path>) -> Response {
+    match tokio::fs::read(&*path).await {
+        Ok(html) => (
+            [
+                (header::CONTENT_TYPE, "text/html; charset=utf-8"),
+                (header::CACHE_CONTROL, "no-cache"),
+                (header::X_FRAME_OPTIONS, "DENY"),
+                (header::X_CONTENT_TYPE_OPTIONS, "nosniff"),
+            ],
+            html,
+        )
+            .into_response(),
+        Err(e) => {
+            eprintln!("whoopy: {}: {e}", path.display());
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
 }
 
 /// Constant time for equal lengths; the length itself is not secret.
@@ -155,7 +244,18 @@ async fn status(State(w): State<Shared>) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use super::same;
+    use super::{from_page, same};
+    use axum::http::HeaderMap;
+
+    #[test]
+    fn page_header() {
+        let mut h = HeaderMap::new();
+        assert!(!from_page(&h));
+        h.insert("x-whoopy", "0".parse().unwrap());
+        assert!(!from_page(&h));
+        h.insert("x-whoopy", "1".parse().unwrap());
+        assert!(from_page(&h));
+    }
 
     #[test]
     fn token_compare() {

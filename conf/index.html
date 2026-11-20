@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whoopy</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- Served by the wake daemon (whoopy serve), behind the portal's admin
+     permission. Its two calls: GET /whoopy/status, POST /whoopy/wake with the
+     header X-Whoopy: 1, which the daemon requires. -->
+<style>
+  :root {
+    --ink: #05323d; --muted: #4d6f78; --line: #d6ecf1; --bg: #f3fbfd; --card: #fff;
+    --teal: #1a9ab2; --teal-deep: #0f6f86; --pink: #c955a8;
+    --up: #1f9d6b; --wait: #d08a12; --down: #8a9aa0; --bad: #c2413a;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e4f6fa; --muted: #93b4bc; --line: #1d3a42; --bg: #0b1d22; --card: #112a31;
+            --teal: #4cc4db; --teal-deep: #6fdcef; --down: #6c7f85; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); }
+  nav { display: flex; align-items: center; gap: .25rem; padding: 0 1rem;
+        background: var(--card); border-bottom: 1px solid var(--line); }
+  nav .brand { display: flex; align-items: center; gap: .5rem; font-weight: 700;
+               margin-right: 1rem; color: var(--ink); text-decoration: none; }
+  nav .brand img { width: 28px; height: 28px; }
+  nav a.tab { padding: .9rem .9rem; color: var(--muted); text-decoration: none;
+              border-bottom: 3px solid transparent; }
+  nav a.tab:hover { color: var(--ink); }
+  nav a.tab[aria-current] { color: var(--ink); border-bottom-color: var(--teal); }
+  main { max-width: 34rem; margin: 2.5rem auto; padding: 0 1rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+          padding: 1.5rem; }
+  .state { display: flex; align-items: center; gap: .75rem; font-size: 1.35rem; font-weight: 600; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--down); flex: none; }
+  .dot.up { background: var(--up); box-shadow: 0 0 0 4px color-mix(in srgb, var(--up) 20%, transparent); }
+  .dot.waking { background: var(--wait); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: .5rem 1rem; margin: 1.25rem 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  button { font: inherit; font-weight: 600; padding: .65rem 1.4rem; border-radius: 8px; border: 0;
+           background: var(--teal-deep); color: #fff; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { button { color: var(--bg); } }
+  button:disabled { opacity: .5; cursor: default; }
+  #message { margin: .75rem 0 0; min-height: 1.5em; color: var(--muted); }
+  #message.bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="/"><img src="/favicon.svg" alt="">Whoopy</a>
+  <a class="tab" href="/" aria-current="page">Status</a>
+  <a class="tab" href="/ui/">Admin</a>
+  <a class="tab" href="/docs">API docs</a>
+</nav>
+<main>
+  <section class="card" aria-live="polite">
+    <div class="state"><span id="dot" class="dot"></span><span id="state">Checking…</span></div>
+    <dl>
+      <dt>Requests</dt><dd id="enabled">…</dd>
+      <dt>Last wake</dt><dd id="last">…</dd>
+    </dl>
+    <button id="wake" type="button">Wake</button>
+    <p id="message"></p>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let wakeRunning = false;
+// True while the message is one refresh() set, so only refresh() clears it.
+let statusMessage = false;
+
+function ago(unix) {
+  const s = Math.max(0, Math.round(Date.now() / 1000 - unix));
+  if (s < 90) return `${s} s ago`;
+  if (s < 5400) return `${Math.round(s / 60)} min ago`;
+  if (s < 129600) return `${Math.round(s / 3600)} h ago`;
+  return new Date(unix * 1000).toLocaleString();
+}
+
+function show(st) {
+  const state = st.up ? "up" : st.waking ? "waking" : "down";
+  $("dot").className = `dot ${state}`;
+  $("state").textContent = {
+    up: "The Ollama machine is awake",
+    waking: "The Ollama machine is waking up",
+    down: "The Ollama machine is asleep",
+  }[state];
+  $("enabled").textContent = st.enabled
+    ? "wake it when they need a local model"
+    : "never wake it (Wake-on-LAN is off)";
+  const l = st.last;
+  $("last").textContent = !l ? "none since the service started"
+    : l.ok ? `answered after ${l.seconds} s, ${ago(l.started)}`
+    : `failed ${ago(l.started)}: ${l.reason}`;
+  $("wake").disabled = wakeRunning || st.up || st.waking;
+}
+
+async function refresh() {
+  try {
+    const r = await fetch("/whoopy/status", { cache: "no-store", redirect: "manual" });
+    if (r.type === "opaqueredirect") {
+      $("dot").className = "dot";
+      $("state").textContent = "Your portal session has expired";
+      say("Reload the page to log in again.", true, true);
+      return;
+    }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    show(await r.json());
+    if (statusMessage) say("");
+  } catch (e) {
+    $("dot").className = "dot";
+    $("state").textContent = "The wake service does not answer";
+    say(String(e.message || e), true, true);
+  }
+}
+
+function say(text, bad = false, fromStatus = false) {
+  statusMessage = fromStatus;
+  $("message").textContent = text;
+  $("message").className = bad ? "bad" : "";
+}
+
+$("wake").addEventListener("click", async () => {
+  wakeRunning = true;
+  $("wake").disabled = true;
+  say("Waking it up. This can take a minute or two.");
+  refresh();
+  try {
+    const r = await fetch("/whoopy/wake",
+      { method: "POST", headers: { "X-Whoopy": "1" }, redirect: "manual" });
+    if (r.type === "opaqueredirect") throw new Error("your portal session has expired, reload the page");
+    const out = await r.json().catch(() => ({ reason: `HTTP ${r.status}` }));
+    wakeRunning = false;
+    if (out.ok) say(`Awake after ${out.seconds} s.`);
+    else say(`The wake failed: ${out.reason}`, true);
+  } catch (e) {
+    wakeRunning = false;
+    say(`The wake failed: ${e.message || e}`, true);
+  }
+  refresh();
+});
+
+refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+</script>
+</body>
+</html>
