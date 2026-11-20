@@ -83,63 +83,7 @@ Two ways, to be chosen:
   wake hook and MCP. 1.109 adds more MCP fixes, a chat page and
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
-### F-P-6 · the wake moves into a Rust daemon with an MCP server
-
-`testing` `large` `filed 2026-11-20`
-
-The wake logic, the panel's Wake button and a small MCP server move into one
-binary, `whoopy/`, run as `whoopy-wake.service` beside LiteLLM, which stays
-the gateway. The hook becomes a client of the daemon's socket, so a request,
-the panel and an agent share one wake. Tools at `/mcp/whoopy`: `wake`,
-`status`, `models`, none taking an argument. The binary is built on the
-server and downloaded at install from a release asset (0.1.0~ynh1).
-
-Release `whoopy-0.1.0` published and the server upgraded 2026-11-20: both
-services up, `/mcp/whoopy` 401 without a key, three tools listed with one.
-**Left:** T-W-1, T-W-2, T-P-4, all three waiting on the desktop, which
-hung in its own suspend on 2026-11-20 and needs a power cycle.
-
 ## Tests
-
-### T-W-1 · a request wakes the desktop, which suspends again once idle
-
-`todo` `playtest` `filed 2026-11-19` `needs: F-P-6`
-
-Reopened 2026-11-20: the wake moved into the daemon (F-P-6). Last result:
-2026-11-19 at `12f6a85`, desktop asleep, a chat request through the domain
-woke it and answered in 27.4 s; it suspended by itself about 30 min later.
-**Do:** the same with 0.1.0~ynh1. **Pass:** the same, and `journalctl -u
-whoopy-wake` shows the one wake.
-
-Tried 2026-11-20: the desktop woke from its first idle suspend with no
-packet from Whoopy, then hung in the NVIDIA resume (PID 1 in D state); a
-forced reboot hung too. Not Whoopy's fault; rerun after a power cycle.
-
-### T-W-2 · a wake that gets no answer fails with a 503 after the timeout
-
-`todo` `playtest` `filed 2026-11-19` `needs: F-P-6`
-
-Reopened 2026-11-20 (F-P-6). Last result: 2026-11-19 at `12f6a85`, with a
-made-up MAC a chat request got a 503 after 121.9 s (`wake_timeout_s` 120).
-**Do:** the same with 0.1.0~ynh1 and `wake_timeout_s` 100, then restore
-the real MAC. **Pass:** a 503
-whose message names the timeout, and a second request within 15 s fails at
-once.
-
-### T-P-4 · the panel's Wake button and status line use the daemon
-
-`todo` `playtest` `filed 2026-11-20` `needs: F-P-6`
-
-**Do:** open the panel with the desktop asleep, press Wake now, reload.
-**Pass:** the status line reads asleep, then awake with the last wake's
-time; the button reports "Ollama answers, N s after the wake request". With
-`whoopy-wake` stopped, the status line says the daemon does not answer.
-
-Partly passed 2026-11-20 at `d9779d4`, from the command line (`app config
-get`, `app action run`), desktop awake: the status line read awake; Wake now
-answered "Ollama answers, 0 s after the wake request" in 2 s; with
-`whoopy-wake` stopped the status line named the daemon. **Left:** the asleep
-reading and a real wake from the button.
 
 ### T-M-1 · the compact format packs to Tandoor's JSON
 
@@ -179,6 +123,10 @@ the result is to the house rules.
 
 ## Closed
 
+- `T-W-1` done `playtest` 2026-11-20 at `d19ad98` · desktop asleep, a chat request through the domain answered 200 in 16 s; froaky's events showed one resume; it suspended again 123 s later (idle lowered to 2 min, model unloaded). The daemon logs failed wakes only, so the evidence is froaky's events, not `journalctl -u whoopy-wake`
+- `T-W-2` done `playtest` 2026-11-20 at `d19ad98` · made-up MAC and `wake_timeout_s` 20: a 503 after 21 s, "Ollama did not answer within 20 s"; a second request at once, a 503 in 0 s, "a wake failed less than 15 s ago"; MAC and 120 s restored
+- `T-P-4` done `playtest` 2026-11-20 at `d19ad98` · status line asleep, Wake now "Ollama answers, 10 s after the wake request" in 13 s, then awake with "Last wake: answered after 10 s"; the daemon-down reading passed at `d9779d4`
+- `F-P-6` done 2026-11-20 · the wake, the panel's Wake button and an MCP server (`wake`, `status`, `models` at `/mcp/whoopy`) in one Rust daemon, `whoopy-wake.service`, the hook its client (0.1.0~ynh1, released as `whoopy-0.1.0`); T-W-1, T-W-2, T-P-3, T-P-4, T-M-8 passed; `tests/wake-playtest.sh` reruns the wake tests
 - `T-M-8` done `playtest` 2026-11-20 at `d9779d4` · `/mcp/whoopy`: 401 without a token and no portal redirect; with the master key `whoopy-wake`, `whoopy-status`, `whoopy-models` listed and each answered in under 0.2 s; the daemon's loopback port 401 without its token
 - `T-P-3` done `playtest` 2026-11-20 at `d9779d4` · backup, remove, restore: 91 s down, both services up, the 18 keys, master key and MCP token identical (fingerprints), `/v1/models` and `/mcp/whoopy` answer; no stored credential or model in the database to compare
 - `F-P-4` done 2026-11-19 · the redrawn icon set from ynh-app-icons 0ca6205: `conf/logo.png`, the six favicons in `conf/icons/` and `doc/logo.svg` replaced, `logo_update/` deleted (~ynh13)
