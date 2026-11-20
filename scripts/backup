@@ -1,0 +1,17 @@
+#!/bin/bash
+
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+# Everything worth keeping is in the database: keys, tokens, models, spend.
+# The secrets (master key, salt key, admin password) are app settings, which
+# every Yunohost backup carries, the MCP token too. The code, venv and wake
+# binary are rebuilt or downloaded on restore.
+
+ynh_backup "/etc/nginx/conf.d/$domain.d/$app.conf"
+ynh_backup "/etc/systemd/system/$app.service"
+ynh_backup "/etc/systemd/system/$app-wake.service"
+
+ynh_psql_dump_db > db.sql
+
+ynh_print_info "Backup script completed for $app."

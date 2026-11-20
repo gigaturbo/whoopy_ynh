@@ -1,0 +1,63 @@
+[Unit]
+Description=Whoopy: wakes the Ollama machine, and its MCP server (__APP__)
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+WorkingDirectory=/
+
+# The wake settings and the MCP token only: no database URL, no LiteLLM key.
+# Root 600, read before privilege drops.
+EnvironmentFile=__INSTALL_DIR__/wake.env
+
+# The socket the LiteLLM hook and the CLI use. Same user as LiteLLM, so the
+# socket is 600; root (the config panel) passes anyway.
+RuntimeDirectory=__APP__
+RuntimeDirectoryMode=0750
+Environment=WHOOPY_SOCKET=/run/__APP__/wake.sock
+
+ExecStart=__INSTALL_DIR__/bin/whoopy serve
+
+MemoryMax=64M
+
+# Only Ollama on the local network and the wake broadcast: never the internet,
+# whatever LiteLLM's outbound setting.
+IPAddressAllow=localhost link-local 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7 255.255.255.255
+IPAddressDeny=any
+
+UMask=077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=-/mnt -/media -/srv -/snapshots
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+Restart=on-failure
+RestartSec=5
+# A stop or a panel Save would otherwise wait for every wake in progress;
+# their waiters get a connection error, which the hook handles.
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

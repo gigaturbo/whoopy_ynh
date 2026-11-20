@@ -1,0 +1,103 @@
+# LiteLLM proxy configuration, rendered by the Yunohost scripts (jinja).
+# Holds no secret: keys and the database URL come from the root-600 whoopy.env.
+# Models added in the admin page live in the database, not here.
+
+model_list:
+  # Every model Ollama has, as ollama/<name>.
+  - model_name: "ollama/*"
+    litellm_params:
+      model: "ollama_chat/*"
+      api_base: "{{ ollama_url }}"
+{%- if keep_alive %}
+      keep_alive: "{{ keep_alive }}"
+{%- endif %}
+  # The same machine's embedding models, as ollama-embed/<name>: the wildcard
+  # above goes through Ollama's chat API, which LiteLLM cannot embed with.
+  # Same address, so the wake hook wakes the machine for these too.
+  - model_name: "ollama-embed/*"
+    litellm_params:
+      model: "ollama/*"
+      api_base: "{{ ollama_url }}"
+{%- if keep_alive %}
+      keep_alive: "{{ keep_alive }}"
+{%- endif %}
+    model_info:
+      mode: "embedding"
+{%- if docs_enabled == "1" and docs_embed_url %}
+  # EmbeddingGemma 300M: the search model of the cheruby-docs-mcp app. Its
+  # address is not Ollama's, so it never wakes the Ollama machine. Clients prefix their text as the model expects:
+  # "task: search result | query: " or "title: none | text: ".
+  - model_name: "embeddinggemma"
+    litellm_params:
+      model: "openai/embeddinggemma"
+      api_base: "{{ docs_embed_url }}"
+      api_key: "none"
+    model_info:
+      mode: "embedding"
+{%- endif %}
+
+
+mcp_servers:
+  # Wake, status and model list of the Ollama machine, from whoopy-wake on
+  # loopback, at /mcp/whoopy. A chat request wakes the machine anyway, so
+  # every key may use it.
+  whoopy:
+    url: "http://127.0.0.1:{{ port_mcp }}/mcp"
+    transport: "http"
+    description: "Wake the Ollama machine, see its state and its models"
+    auth_type: "bearer_token"
+    authentication_token: os.environ/WHOOPY_MCP_TOKEN
+    allow_all_keys: true
+    # LiteLLM gives an MCP call 60 s by default; a wake may take longer.
+    timeout: {{ (wake_timeout_s | int) + 10 }}
+{%- if search_enabled == "1" %}
+  # Web search and page reading, from the cheruby-search-mcp app, at
+  # /mcp/web. It never wakes the Ollama machine.
+  web:
+    url: "{{ search_url }}"
+    transport: "http"
+    description: "Web search (SearXNG) and page reading"
+    auth_type: "bearer_token"
+    authentication_token: os.environ/WHOOPY_SEARCH_TOKEN
+    allow_all_keys: true
+{%- endif %}
+{%- if docs_enabled == "1" %}
+  # The folders the cheruby-docs-mcp app opens to this token, read-only, at
+  # /mcp/docs. Not allow_all_keys: only keys granted docs reach it.
+  docs:
+    # Key grants hold the server id. Unpinned, it is a hash of the name and
+    # address, so a new docs_url would drop every grant. This is the id
+    # docs_<user> had until ~ynh9, so its grants carry over.
+    server_id: "6ac1551792da229286bacbff633ec9fe"
+    url: "{{ docs_url }}"
+    transport: "http"
+    description: "Documents and notes, read-only"
+    auth_type: "bearer_token"
+    authentication_token: os.environ/WHOOPY_DOCS_TOKEN
+{%- endif %}
+
+litellm_settings:
+  # whoopy_wake.py, beside this file.
+  callbacks: ["whoopy_wake.handler"]
+  drop_params: true
+  # /v1/models asks Ollama's /api/tags for the wildcard above. That loads no
+  # model; while the machine sleeps it fails fast and lists nothing.
+  check_provider_endpoint: true
+
+router_settings:
+  # A retry would wait out a second wake on a machine that did not come up.
+  num_retries: 0
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+  store_model_in_db: true
+{%- if env_login == "0" %}
+  # Only personal admin accounts (database users) may sign in to the admin page.
+  disable_env_credential_login: true
+{%- endif %}
+  # A health check sends a real completion: it would load a model and keep
+  # the Ollama machine awake. Leave off.
+  background_health_checks: false
+  # Behind nginx every client is 127.0.0.1; the login throttle needs the real one.
+  trusted_proxy_ranges: ["127.0.0.1/32", "::1/128"]

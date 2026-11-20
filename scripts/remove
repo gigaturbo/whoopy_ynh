@@ -1,0 +1,19 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+for service in "$app" "$app-wake"; do
+    if ynh_hide_warnings yunohost service status "$service" >/dev/null; then
+        yunohost service remove "$service"
+    fi
+done
+
+ynh_config_remove_systemd
+ynh_config_remove_systemd "$app-wake"
+ynh_config_remove_nginx
+
+# The install dir, data dir, database, user and Node version go with the
+# manifest's resources.
+
+ynh_script_progression "Removal of $app completed"

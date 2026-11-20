@@ -1,0 +1,125 @@
+#:schema https://raw.githubusercontent.com/YunoHost/apps/main/schemas/manifest.v2.schema.json
+
+packaging_format = 2
+
+id = "whoopy"
+name = "Whoopy"
+description.en = "One authenticated AI endpoint in front of an Ollama that sleeps, woken on demand"
+description.fr = "Un point d'accès IA authentifié devant un Ollama qui dort, réveillé à la demande"
+
+version = "0.1.0~ynh1"
+
+maintainers = ["gigaturbo"]
+
+[upstream]
+license = "MIT"
+website = "https://www.litellm.ai/"
+admindoc = "https://docs.litellm.ai/docs/proxy/quick_start"
+code = "https://github.com/BerriAI/litellm"
+
+[integration]
+yunohost = ">= 12.1"
+helpers_version = "2.1"
+# The lock file holds aarch64 wheels only.
+architectures = ["arm64"]
+multi_instance = false
+ldap = false
+sso = false
+disk = "2G"
+ram.build = "1G"
+ram.runtime = "1G"
+
+[install]
+    [install.domain]
+    type = "domain"
+
+    [install.init_main_permission]
+    help.en = "Who may open the admin page. Behind it, LiteLLM asks for its own admin password."
+    type = "group"
+    default = "admins"
+
+    [install.ollama_url]
+    ask.en = "Ollama URL"
+    ask.fr = "URL d'Ollama"
+    help.en = "Scheme, host and port of the Ollama server, without a path."
+    type = "string"
+    example = "http://192.168.1.10:11434"
+    pattern.regexp = '^https?://[^/]+$'
+    pattern.error = "scheme, host and port only, e.g. http://192.168.1.10:11434"
+
+    [install.ui_password]
+    ask.en = "Admin password for LiteLLM's page (user: admin)"
+    ask.fr = "Mot de passe administrateur de la page LiteLLM (utilisateur : admin)"
+    type = "password"
+
+[resources]
+
+    # uv installs the locked wheels and checks every hash.
+    [resources.sources.uv]
+    arm64.url = "https://github.com/astral-sh/uv/releases/download/0.12.12/uv-aarch64-unknown-linux-gnu.tar.gz"
+    arm64.sha256 = "fe08db50cc1b56cd1da7801065ed1103d27ed3f9571cd122386cfc7faf1b8df5"
+    in_subdir = true
+    autoupdate.strategy = "latest_github_release"
+    autoupdate.upstream = "https://github.com/astral-sh/uv"
+    autoupdate.asset.arm64 = "^uv-aarch64-unknown-linux-gnu.tar.gz$"
+
+    # The wake daemon and its CLI, built from whoopy/ and published as a
+    # release asset of this repository: install never compiles.
+    [resources.sources.whoopy]
+    arm64.url = "https://github.com/gigaturbo/whoopy_ynh/releases/download/whoopy-0.1.0/whoopy-aarch64-linux"
+    arm64.sha256 = "a446adb9b433b8df3bad7f28ca60dd11782a04ba18a14e5b40601675cbf1d100"
+    extract = false
+    rename = "whoopy"
+
+    [resources.system_user]
+
+    [resources.install_dir]
+    # Code and settings: root-owned, read by the app user through its group.
+    owner = "root:rwx"
+    group = "__APP__:rx"
+
+    [resources.data_dir]
+    # The app's HOME, the copied migrations and admin page files.
+    owner = "__APP__:rwx"
+    group = "__APP__:rx"
+
+    [resources.ports]
+    main.default = 4000
+    # The wake daemon's MCP server, on loopback, reached through LiteLLM.
+    mcp.default = 8790
+
+    # Prisma, LiteLLM's database layer, runs its command-line tool on Node.
+    # 5.17 predates Node 24.
+    [resources.nodejs]
+    version = "22"
+
+    [resources.apt]
+    packages = "postgresql"
+
+    [resources.database]
+    type = "postgresql"
+
+    [resources.permissions]
+    # The admin page and the management API it calls. auth_header off: the
+    # portal would replace the page's Bearer token with its own Basic header.
+    main.url = "/"
+    main.auth_header = false
+    main.show_tile = true
+
+    # The model API: open to the internet, guarded by LiteLLM's own tokens.
+    api.url = "/v1"
+    api.additional_urls = ["/chat/completions", "/completions", "/embeddings", "/models", "/mcp"]
+    api.allowed = "visitors"
+    api.auth_header = false
+    api.show_tile = false
+    api.protected = true
+
+    # LiteLLM management routes that sit under the API prefixes above. The
+    # portal matches by plain prefix and the longest wins, so these go back
+    # behind it: creating an MCP server can mean running a command.
+    admin_api.url = "/v1/mcp"
+    admin_api.additional_urls = ["/mcp-rest", "/v1/tool", "/v1/traces", "/v1/decisions"]
+    admin_api.allowed = "admins"
+    admin_api.auth_header = false
+    admin_api.show_tile = false
+    admin_api.protected = true

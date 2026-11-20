@@ -1,0 +1,84 @@
+[Unit]
+Description=Whoopy: LiteLLM gateway in front of Ollama (__APP__)
+After=network.target postgresql.service __APP__-wake.service
+Wants=postgresql.service __APP__-wake.service
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+WorkingDirectory=__DATA_DIR__
+
+# Secrets and the wake settings. Root 600, read before privilege drops.
+EnvironmentFile=__INSTALL_DIR__/whoopy.env
+
+# Node runs Prisma's command line at start-up; nothing is fetched at runtime.
+Environment=PATH=__PATH_WITH_NODEJS__
+Environment=HOME=__DATA_DIR__
+Environment=PRISMA_BINARY_CACHE_DIR=__INSTALL_DIR__/prisma
+Environment=PRISMA_CLI_PATH=__INSTALL_DIR__/prisma/node_modules/.bin/prisma
+Environment=PRISMA_CLI_QUERY_ENGINE_TYPE=binary
+Environment=PRISMA_OFFLINE_MODE=true
+Environment=PRISMA_HIDE_UPDATE_MESSAGE=1
+Environment=PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+Environment=CHECKPOINT_DISABLE=1
+# The schema engine from the CLI install; the CLI would otherwise look in a cache.
+# Each start applies pending database migrations (LiteLLM's default).
+Environment=PRISMA_SCHEMA_ENGINE_BINARY=__INSTALL_DIR__/prisma/node_modules/@prisma/engines/schema-engine-linux-arm64-openssl-3.0.x
+# The code is read-only: LiteLLM copies what it rewrites to the data dir.
+Environment=LITELLM_MIGRATION_DIR=__DATA_DIR__/migrations
+Environment=LITELLM_UI_PATH=__DATA_DIR__/ui
+# No fetch from GitHub or litellm.ai at start-up or from the admin page.
+Environment=LITELLM_LOCAL_MODEL_COST_MAP=True
+Environment=LITELLM_LOCAL_ANTHROPIC_BETA_HEADERS=True
+Environment=LITELLM_LOCAL_BLOG_POSTS=True
+Environment=LITELLM_LOCAL_AUTOROUTER_PRESETS=True
+Environment=LITELLM_LOCAL_POLICY_TEMPLATES=True
+Environment=HF_HUB_OFFLINE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Whoopy's icons in LiteLLM's admin page.
+Environment=LITELLM_FAVICON_URL=__INSTALL_DIR__/icons/favicon-32.png
+Environment=UI_LOGO_PATH=__INSTALL_DIR__/icons/whoopy.png
+
+# One uvicorn worker. Always the assigned port: a busy default makes
+# LiteLLM pick a random one silently.
+ExecStart=__INSTALL_DIR__/venv/bin/litellm --config __INSTALL_DIR__/config/config.yaml --host 127.0.0.1 --port __PORT__ --num_workers 1
+
+# LiteLLM has reports of memory growing for hours. Stop it, not the host.
+MemoryMax=1536M
+
+# Outbound: "any", or only loopback and private networks (config panel).
+IPAddressAllow=localhost link-local multicast 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7
+IPAddressDeny=__IP_DENY__
+
+UMask=027
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ReadWritePaths=__DATA_DIR__
+# The rest of /home and every mounted disk stay out of reach.
+ProtectHome=tmpfs
+BindPaths=__DATA_DIR__
+InaccessiblePaths=-/mnt -/media -/srv -/snapshots
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

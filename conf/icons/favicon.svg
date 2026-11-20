@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="310" height="310" viewBox="96 56 320 320">
+  <defs>
+    <radialGradient id="skin" gradientUnits="userSpaceOnUse" cx="226" cy="170" r="250">
+      <stop offset="0" stop-color="#c2f8ff"/>
+      <stop offset="1" stop-color="#2fbad4"/>
+    </radialGradient>
+    <linearGradient id="gill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59ad6"/>
+      <stop offset="1" stop-color="#c955a8"/>
+    </linearGradient>
+    <linearGradient id="shade" gradientUnits="userSpaceOnUse" x1="0" y1="240" x2="0" y2="296">
+      <stop offset="0" stop-color="#0f6f86" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0f6f86" stop-opacity="0.28"/>
+    </linearGradient>
+    <!-- the mascot's head, closed under the chin -->
+    <path id="headShape" d="M 256,132 C 326,132 368,162 368,206 C 368,262 320,294 256,294
+       C 192,294 144,262 144,206 C 144,162 186,132 256,132 Z"/>
+    <clipPath id="headClip"><use xlink:href="#headShape"/></clipPath>
+  </defs>
+  <title>whoopy favicon</title>
+  <!-- the mascot's head and gills, gills pulled in, strokes thickened for small sizes -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#8e2f78" stroke-width="28">
+      <path d="M 156,204 L 142,200 M 142,200 Q 130,186 128,166 M 142,200 L 116,198 M 142,200 Q 130,216 130,236"/>
+      <path d="M 356,204 L 370,200 M 370,200 Q 382,186 384,166 M 370,200 L 396,198 M 370,200 Q 382,216 382,236"/>
+    </g>
+    <g stroke="url(#gill)" stroke-width="14">
+      <path d="M 156,204 L 142,200 M 142,200 Q 130,186 128,166 M 142,200 L 116,198 M 142,200 Q 130,216 130,236"/>
+      <path d="M 356,204 L 370,200 M 370,200 Q 382,186 384,166 M 370,200 L 396,198 M 370,200 Q 382,216 382,236"/>
+    </g>
+  </g>
+  <use xlink:href="#headShape" fill="url(#skin)"/>
+  <g clip-path="url(#headClip)">
+    <rect x="140" y="240" width="232" height="60" fill="url(#shade)"/>
+  </g>
+  <use xlink:href="#headShape" fill="none" stroke="#0f6f86" stroke-width="14" stroke-linejoin="round"/>
+  <ellipse cx="203" cy="200" rx="21" ry="27" fill="#05323d"/>
+  <ellipse cx="309" cy="200" rx="21" ry="27" fill="#05323d"/>
+  <path d="M 184,212 Q 203,234 222,212 Q 217,226 203,227 Q 189,226 184,212 Z" fill="#1a9ab2"/>
+  <path d="M 290,212 Q 309,234 328,212 Q 323,226 309,227 Q 295,226 290,212 Z" fill="#1a9ab2"/>
+  <circle cx="211" cy="188" r="9" fill="#ffffff"/>
+  <circle cx="317" cy="188" r="9" fill="#ffffff"/>
+  <ellipse cx="180" cy="244" rx="14" ry="9" fill="#ffb3cf"/>
+  <ellipse cx="332" cy="244" rx="14" ry="9" fill="#ffb3cf"/>
+  <path d="M 218,234 Q 256,248 294,234 Q 288,270 256,270 Q 224,270 218,234 Z" fill="#05323d"
+     stroke="#05323d" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M 236,260 Q 256,249 276,260 Q 268,270 256,270 Q 244,270 236,260 Z" fill="#ff9ac0"/>
+</svg>

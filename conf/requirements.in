@@ -1,0 +1,7 @@
+# Inputs of conf/requirements.txt. Re-lock only deliberately (RISKS R35 on the server):
+#   uv pip compile conf/requirements.in --python-version 3.11 --python-platform aarch64-unknown-linux-gnu \
+#     --generate-hashes --no-build --exclude-newer <date> \
+#     --exclude-newer-package litellm=<date> ... -o conf/requirements.txt
+litellm[proxy]==1.106.6
+# Not in the [proxy] extra; LiteLLM imports it for its database.
+prisma==0.15.0

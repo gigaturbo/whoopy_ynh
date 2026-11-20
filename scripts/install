@@ -1,0 +1,25 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+# A password-type install answer is not kept by Yunohost. Keep it, so an
+# upgrade can render whoopy.env again. settings.yml is root-only.
+set +o xtrace
+ynh_app_setting_set --key=ui_password --value="$ui_password"
+set -o xtrace
+whoopy_default_settings
+
+ynh_script_progression "Installing LiteLLM from the locked wheels..."
+whoopy_install_code
+whoopy_build_venv
+whoopy_install_binary
+
+ynh_script_progression "Adding configuration files..."
+whoopy_configure
+whoopy_set_logo
+
+ynh_script_progression "Starting LiteLLM (the first start creates the database tables)..."
+whoopy_start
+
+ynh_script_progression "Installation of $app completed"

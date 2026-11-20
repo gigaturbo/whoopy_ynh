@@ -1,0 +1,62 @@
+#!/bin/bash
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+whoopy_default_settings
+
+# Until ~ynh9, the side apps' tokens were read from their settings at each
+# configure; they are pasted in the panel now. Taken from them once here, so
+# what was on stays on: search's token, and the docs token of the first admin,
+# the one user /mcp/docs_<user> served. Untraced: YunoHost redacts a traced
+# token in the operation log only, not in yunohost-cli.log.
+admin=$(yunohost user group info admins --output-as json \
+    | python3 -c 'import json, sys; print(json.load(sys.stdin)["members"][0])')
+set +o xtrace
+if [ "${search_enabled:-0}" = "1" ] && [ -z "${search_token:-}" ]; then
+    search_token=$(ynh_app_setting_get --app=cheruby-search-mcp --key=token)
+    ynh_app_setting_set --key=search_token --value="$search_token"
+fi
+if [ "${docs_enabled:-0}" = "1" ] && [ -z "${docs_token:-}" ]; then
+    docs_token=$(ynh_app_setting_get --app=cheruby-docs-mcp --key="token_$admin")
+    if [ -n "$docs_token" ]; then
+        ynh_app_setting_set --key=docs_token --value="$docs_token"
+    else
+        ynh_app_setting_set --key=docs_enabled --value=0
+        docs_enabled=0
+        ynh_print_warn "Documents turned off: paste a token cheruby-docs-mcp gives to turn them back on."
+    fi
+fi
+set -o xtrace
+
+# Rebuilt only when the lock file or uv changed: the pin moves only with a
+# new package version (see RISKS R35 on the server).
+rebuild=1
+if [ -x "$install_dir/venv/bin/litellm" ] \
+    && [ "$(whoopy_build_fingerprint)" = "${build_fingerprint:-}" ]; then
+    rebuild=0
+else
+    whoopy_check_downloads
+fi
+
+ynh_script_progression "Stopping LiteLLM..."
+ynh_systemctl --service="$app" --action="stop"
+if [ -e "/etc/systemd/system/$app-wake.service" ]; then
+    ynh_systemctl --service="$app-wake" --action="stop"
+fi
+
+if [ "$rebuild" = 1 ]; then
+    ynh_script_progression "Reinstalling LiteLLM from the locked wheels..."
+    whoopy_install_code
+    whoopy_build_venv
+fi
+whoopy_install_binary
+
+ynh_script_progression "Updating configuration files..."
+whoopy_configure
+whoopy_set_logo
+
+ynh_script_progression "Starting LiteLLM (pending database migrations run now)..."
+whoopy_start
+
+ynh_script_progression "Upgrade of $app completed"

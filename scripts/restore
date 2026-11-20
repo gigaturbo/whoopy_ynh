@@ -1,0 +1,27 @@
+#!/bin/bash
+
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+# Needs the network: the code is rebuilt from the lock file, not restored.
+whoopy_default_settings
+
+ynh_script_progression "Reinstalling LiteLLM from the locked wheels..."
+whoopy_install_code
+whoopy_build_venv
+whoopy_install_binary
+
+ynh_script_progression "Restoring the database..."
+ynh_psql_db_shell < ./db.sql
+# psql does not stop on errors: check the keys table came back.
+ynh_psql_db_shell <<< 'SELECT count(*) FROM "LiteLLM_VerificationToken";' >/dev/null \
+    || ynh_die "The database dump did not restore: the keys table is missing."
+
+ynh_script_progression "Restoring configuration files..."
+whoopy_configure
+whoopy_set_logo
+
+ynh_script_progression "Starting LiteLLM..."
+whoopy_start
+
+ynh_script_progression "Restoration completed for $app"
