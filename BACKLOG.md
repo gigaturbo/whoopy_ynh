@@ -93,7 +93,10 @@ requests wake it, the last wake, and a Wake button. Tabs link to `/ui/` and to
 `/docs`, where `DOCS_URL` moves Swagger. Links, not frames: LiteLLM's
 `X-Frame-Options: DENY` stays. Previewed with Playwright on a local daemon
 (light and dark, awake, asleep, a failed wake; a POST without `X-Whoopy` 403).
-Release `whoopy-0.2.0` and the upgrade remain.
+Release `whoopy-0.2.0` published and the server upgraded 2026-11-20
+(0.2.0~ynh1): `/` sends a logged-out visitor to the portal, `/docs` is
+Swagger, `/v1/models` 200 with a key, the installed page reads the real
+state. Only T-P-5 remains.
 
 ## Tests
 
