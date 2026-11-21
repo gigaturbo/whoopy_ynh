@@ -23,12 +23,16 @@ A tool listing reaches no hook (LiteLLM 1.106.6), so it never wakes: while
 the machine sleeps, its servers are missing from the list. And LiteLLM refuses
 a tool name it has never listed before any hook runs, so after a restart
 while the machine sleeps, a call fails until a listing succeeds.
+
+It also empties LiteLLM's static Ollama model list: while the machine sleeps,
+/api/tags fails and /v1/models would list that instead ("ollama/llama2").
 """
 
 import logging
 import os
 
 import httpx
+import litellm
 from fastapi import HTTPException
 from litellm.exceptions import ServiceUnavailableError
 from litellm.integrations.custom_logger import CustomLogger
@@ -44,6 +48,10 @@ WAIT_S = float(os.environ.get("WHOOPY_WAKE_TIMEOUT_S", "90")) + 10
 WAKE_MCP_SERVERS: set[str] = set()
 
 log = logging.getLogger("whoopy_wake")
+
+# The fallback LiteLLM lists when Ollama's /api/tags fails (LiteLLM 1.106.6,
+# OllamaModelInfo.get_models): a model this machine may not have.
+litellm.models_by_provider["ollama"] = []
 
 
 class WakeOnLan(CustomLogger):

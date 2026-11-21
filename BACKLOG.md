@@ -57,14 +57,6 @@ anything written to the live Tandoor need the author's go-ahead.
 
 The first Tandoor tool server only searches, reads and adds recipes.
 
-### F-P-1 · the wildcard lists `ollama/llama2` while Ollama sleeps
-
-`open` `low` `filed 2026-11-04`
-
-Seen in a scratch run and on the server: with `/api/tags` unreachable, `/v1/models` falls back to
-a default name rather than an empty list. Cosmetic, but a client may offer a
-model that does not exist.
-
 ### F-P-5 · move off LiteLLM 1.106.6
 
 `todo` `medium` `filed 2026-11-20`
@@ -125,6 +117,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `F-P-1` done 2026-11-21 · the hook empties LiteLLM's static Ollama list, so a failed `/api/tags` lists nothing instead of `ollama/llama2` (0.2.0~ynh2); checked against the installed LiteLLM with a dead address, not yet on the server. A listing is cached 5 min, so models appear up to 5 min after a wake
 - `T-P-5` done `playtest` 2026-11-21 at `aeb123a` · through the domain: logged out sent to the portal, as an admin the real state and a wake ending "Awake after N s", Admin opens LiteLLM's page, API docs opens Swagger, `/v1/models` 200 with a key (run by the author)
 - `F-P-7` done 2026-11-21 · Whoopy's status page at `/`, served by the wake daemon: state, last wake, a Wake button (needs `X-Whoopy: 1`), tabs to `/ui/` and `/docs`, where `DOCS_URL` moved Swagger (0.2.0~ynh1, released as `whoopy-0.2.0`, upgraded 2026-11-20); T-P-5 passed
 - `T-W-1` done `playtest` 2026-11-20 at `d19ad98` · desktop asleep, a chat request through the domain answered 200 in 16 s; froaky's events showed one resume; it suspended again 123 s later (idle lowered to 2 min, model unloaded). The daemon logs failed wakes only, so the evidence is froaky's events, not `journalctl -u whoopy-wake`
