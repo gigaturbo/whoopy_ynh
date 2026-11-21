@@ -153,9 +153,9 @@ run__rotate_master_key() {
     ui_password=$(ynh_app_setting_get --key=ui_password)
     search_token=$(ynh_app_setting_get --key=search_token)
     docs_token=$(ynh_app_setting_get --key=docs_token)
-    set -o xtrace
     master_key="sk-$(ynh_string_random --length=48)"
     ynh_app_setting_set --key=master_key --value="$master_key"
+    set -o xtrace
     whoopy_configure
     whoopy_start
     ynh_print_info "New master key saved. It is in $install_dir/whoopy.env (root only)."

@@ -20,14 +20,16 @@ whoopy_default_settings() {
     ynh_app_setting_set_default --key=docs_enabled --value=0
     ynh_app_setting_set_default --key=docs_url --value="http://127.0.0.1:8770/mcp"
     ynh_app_setting_set_default --key=docs_embed_url --value="http://127.0.0.1:8771/v1"
+    # The tokens and secrets below are untraced: the trace prints each value,
+    # in the -z checks and in set_default's own check, and YunoHost redacts
+    # the operation log, not yunohost-cli.log.
+    set +o xtrace
     # app.env needs both defined, even empty.
     ynh_app_setting_set_default --key=search_token --value=""
     ynh_app_setting_set_default --key=docs_token --value=""
 
     # Generated once. The salt key must never change: it encrypts the
-    # provider credentials stored in the database. Each secret is assigned
-    # to its own variable first: Yunohost's log redaction learns a value from
-    # a "<name>key=<value>" trace line, so it is hidden from its first trace.
+    # provider credentials stored in the database.
     if [ -z "${master_key:-}" ]; then
         master_key="sk-$(ynh_string_random --length=48)"
         ynh_app_setting_set --key=master_key --value="$master_key"
@@ -42,6 +44,7 @@ whoopy_default_settings() {
         mcp_token=$(ynh_string_random --length=48)
         ynh_app_setting_set --key=mcp_token --value="$mcp_token"
     fi
+    set -o xtrace
 }
 
 # uv is told not to look for configuration files: Yunohost runs scripts from a
