@@ -83,20 +83,6 @@ Two ways, to be chosen:
   wake hook and MCP. 1.109 adds more MCP fixes, a chat page and
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
-### F-P-7 · Whoopy's own status page at `/`
-
-`doing` `medium` `filed 2026-11-20`
-
-`/` was LiteLLM's Swagger page, which says nothing about the Ollama machine.
-The wake daemon now serves a page there: awake, waking or asleep, whether
-requests wake it, the last wake, and a Wake button. Tabs link to `/ui/` and to
-`/docs`, where `DOCS_URL` moves Swagger. Links, not frames: LiteLLM's
-`X-Frame-Options: DENY` stays. Previewed with Playwright on a local daemon
-(light and dark, awake, asleep, a failed wake; a POST without `X-Whoopy` 403).
-Release `whoopy-0.2.0` published and the server upgraded 2026-11-20
-(0.2.0~ynh1): `/` sends a logged-out visitor to the portal, `/docs` is
-Swagger, `/v1/models` 200 with a key, the installed page reads the real
-state. Only T-P-5 remains.
 
 ## Tests
 
@@ -136,18 +122,11 @@ listed and a search works; the bare call refused; no wake packet in
 **Pass:** both succeed; record how each passes the Whoopy token and how close
 the result is to the house rules.
 
-### T-P-5 · the status page through the domain
-
-`todo` `playtest` `filed 2026-11-20` `needs: F-P-7`
-
-**Do:** after the upgrade, open `https://ai.gigaturbo.fr/` logged out, then
-as an admin; press Wake with the desktop asleep; follow both tabs; call
-`/v1/models` with a key. **Pass:** logged out goes to the portal login; as an
-admin the page shows the real state and the wake ends "Awake after N s";
-Admin opens LiteLLM's page, API docs opens Swagger; `/v1/models` answers 200.
 
 ## Closed
 
+- `T-P-5` done `playtest` 2026-11-21 at `aeb123a` · through the domain: logged out sent to the portal, as an admin the real state and a wake ending "Awake after N s", Admin opens LiteLLM's page, API docs opens Swagger, `/v1/models` 200 with a key (run by the author)
+- `F-P-7` done 2026-11-21 · Whoopy's status page at `/`, served by the wake daemon: state, last wake, a Wake button (needs `X-Whoopy: 1`), tabs to `/ui/` and `/docs`, where `DOCS_URL` moved Swagger (0.2.0~ynh1, released as `whoopy-0.2.0`, upgraded 2026-11-20); T-P-5 passed
 - `T-W-1` done `playtest` 2026-11-20 at `d19ad98` · desktop asleep, a chat request through the domain answered 200 in 16 s; froaky's events showed one resume; it suspended again 123 s later (idle lowered to 2 min, model unloaded). The daemon logs failed wakes only, so the evidence is froaky's events, not `journalctl -u whoopy-wake`
 - `T-W-2` done `playtest` 2026-11-20 at `d19ad98` · made-up MAC and `wake_timeout_s` 20: a 503 after 21 s, "Ollama did not answer within 20 s"; a second request at once, a 503 in 0 s, "a wake failed less than 15 s ago"; MAC and 120 s restored
 - `T-P-4` done `playtest` 2026-11-20 at `d19ad98` · status line asleep, Wake now "Ollama answers, 10 s after the wake request" in 13 s, then awake with "Last wake: answered after 10 s"; the daemon-down reading passed at `d9779d4`
