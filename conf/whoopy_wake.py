@@ -3,14 +3,13 @@
 Loaded by LiteLLM from `litellm_settings.callbacks` ("whoopy_wake.handler"),
 from the directory of config.yaml. The waking itself is done by the wake
 daemon (whoopy-wake.service): this hook asks it over its socket, and the
-daemon answers once Ollama does, or with 503 when the wake fails. The daemon
-holds the shared wake, the Wake-on-LAN settings and the timers.
+daemon answers once Ollama does, at once when waking is off, or with 503 when
+the wake fails. The daemon holds the shared wake, the wake settings (changed
+on the status page) and the timers.
 
-Settings come from the service environment:
+From the service environment:
 
     WHOOPY_OLLAMA_URL       scheme://host:port of Ollama, no path
-    WHOOPY_WOL_ENABLED      "1" to wake; anything else turns this hook off
-    WHOOPY_WAKE_TIMEOUT_S   the daemon's own timeout; the hook waits a little longer
     WHOOPY_SOCKET           the daemon's socket (default /run/whoopy/wake.sock)
 
 Two entry points, because LiteLLM has two request paths:
@@ -24,12 +23,16 @@ the machine sleeps, its servers are missing from the list. And LiteLLM refuses
 a tool name it has never listed before any hook runs, so after a restart
 while the machine sleeps, a call fails until a listing succeeds.
 
+It sets the page's keep_alive on requests to the ollama/ and ollama-embed/
+routes that carry none, read from the daemon at most every KEEP_ALIVE_TTL.
+
 It also empties LiteLLM's static Ollama model list: while the machine sleeps,
 /api/tags fails and /v1/models would list that instead ("ollama/llama2").
 """
 
 import logging
 import os
+import time
 
 import httpx
 import litellm
@@ -38,13 +41,16 @@ from litellm.exceptions import ServiceUnavailableError
 from litellm.integrations.custom_logger import CustomLogger
 
 OLLAMA_URL = os.environ.get("WHOOPY_OLLAMA_URL", "").rstrip("/")
-ENABLED = os.environ.get("WHOOPY_WOL_ENABLED") == "1"
 SOCKET = os.environ.get("WHOOPY_SOCKET", "/run/whoopy/wake.sock")
-# Past the daemon's timeout, so its own 503 and reason arrive first.
-WAIT_S = float(os.environ.get("WHOOPY_WAKE_TIMEOUT_S", "90")) + 10
+# Past the daemon's longest timeout (MAX_TIMEOUT_S in its settings.rs), so its
+# own 503 and reason arrive first.
+WAIT_S = 540 + 10
+# The model routes config.yaml points at Ollama.
+OLLAMA_ROUTES = ("ollama/", "ollama-embed/")
+KEEP_ALIVE_TTL = 10.0
 
 # The `mcp_servers` names in config.yaml that run on the Ollama machine; none
-# today. A server on this host (whoopy, web, docs) must never be listed.
+# today. A server on this host, whoopy or any other, must never be listed.
 WAKE_MCP_SERVERS: set[str] = set()
 
 log = logging.getLogger("whoopy_wake")
@@ -62,11 +68,23 @@ class WakeOnLan(CustomLogger):
             base_url="http://whoopy",
             timeout=WAIT_S,
         )
+        self._keep_alive = ""
+        self._keep_alive_until = 0.0
+
+    async def _keep_alive_setting(self):
+        """The page's keep_alive, "" when unset or the daemon does not answer."""
+        if time.monotonic() < self._keep_alive_until:
+            return self._keep_alive
+        try:
+            resp = await self._client.get("/settings", timeout=2)
+            self._keep_alive = resp.json().get("keep_alive") or ""
+        except (httpx.HTTPError, ValueError, AttributeError):
+            self._keep_alive = ""
+        self._keep_alive_until = time.monotonic() + KEEP_ALIVE_TTL
+        return self._keep_alive
 
     async def _not_awake(self):
         """None once Ollama answers, or when nothing needs waking; else why not."""
-        if not ENABLED:
-            return None
         try:
             resp = await self._client.post("/ensure")
         except httpx.TimeoutException:
@@ -98,8 +116,15 @@ class WakeOnLan(CustomLogger):
         )
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
+        if call_type != "call_mcp_tool":
+            model = data.get("model")
+            if isinstance(model, str) and model.startswith(OLLAMA_ROUTES) and "keep_alive" not in data:
+                keep_alive = await self._keep_alive_setting()
+                if keep_alive:
+                    data["keep_alive"] = keep_alive
+            return data
         # LiteLLM puts the server's alias or config name in mcp_server_name.
-        if call_type != "call_mcp_tool" or data.get("mcp_server_name") not in WAKE_MCP_SERVERS:
+        if data.get("mcp_server_name") not in WAKE_MCP_SERVERS:
             return data
         reason = await self._not_awake()
         if reason is None:
