@@ -16,6 +16,52 @@ runtime.
 
 ## Features
 
+### F-M-12 · the MCP side apps become database servers, unnamed by Whoopy
+
+`doing` `medium` `filed 2026-11-22`
+
+Whoopy's package named cheruby-search-mcp and cheruby-docs-mcp: panel
+sections, settings, two tokens in `whoopy.env`, `web`, `docs` and
+`embeddinggemma` in `config.yaml`. Each new MCP app would have meant a new
+release of Whoopy.
+
+**Do:** drop all of it from the package (0.2.0~ynh5); the upgrade deletes the
+seven settings. Right after it, re-create `web` (every key), `docs` (its old
+`server_id`, granted keys only) and `embeddinggemma` in LiteLLM's database
+with the master key, the tokens read untraced from the apps. Owes T-M-7, the
+docs grant check, `embeddinggemma` 768 dimensions with the desktop asleep,
+T-M-8 and T-P-3.
+
+### F-M-13 · add an MCP server from Whoopy's page
+
+`doing` `medium` `filed 2026-11-22` `needs: F-M-12`
+
+Adding a server in LiteLLM's admin page means a long form.
+
+**Do:** a section on the status page lists the database MCP servers, adds one
+(name, address, Bearer token, every key or not) and removes one, calling
+`/v1/mcp/server` from the browser with LiteLLM's own `token` sign-in cookie,
+as its dashboard does. No secret reaches the wake daemon. Signed out of
+`/ui/`: a link to sign in. A Playwright check through the portal.
+
+### F-P-9 · wake tuning moves from the panel to Whoopy's page
+
+`todo` `large` `filed 2026-11-22`
+
+The panel holds settings that only tune the wake. Its Save re-renders every
+file and restarts both services for a MAC address.
+
+**Do:** the panel keeps only what guards Whoopy (`ollama_url`, `outbound`,
+`lan_ranges`, `ui_password`, `env_login`, the master key button), since the
+page's settings are writable by user `whoopy`, which LiteLLM runs as too.
+`wol_enabled`, `wol_mac`, `wol_broadcast`, `wake_timeout_s` and `keep_alive`
+move to a Settings section of the page: the daemon keeps them in
+`/var/lib/whoopy/settings.json` (StateDirectory, backed up), applies them
+live, and hands `keep_alive` to the hook, which sets it per request. The hook
+waits the 540 s maximum; the `whoopy` MCP timeout is fixed at 550. The panel's
+Wake section goes too. The upgrade seeds the file from the old settings. A new
+binary; owes T-W-1, T-W-2, T-P-4, T-P-5, T-P-3.
+
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
 
 `todo` `large` `filed 2026-11-06`
@@ -44,10 +90,9 @@ model is trained on:
 The skill's `scripts/move.py` is the code for all of them but the Tandoor
 calls: ported and kept in step, or imported from a pinned copy, so its output
 stays what the model was trained on.
-Calls to Tandoor on loopback carry its domain as `Host`. Whoopy only registers
-it: `mcp_servers.tandoor` over `http`, `bearer_token` auth, `allow_all_keys:
-true`, when its panel switch is on, with the address and secret in the panel.
-`WAKE_MCP_SERVERS` in the wake hook leaves `tandoor` out. Install, upgrade and
+Calls to Tandoor on loopback carry its domain as `Host`. Whoopy's package does not
+know it: it is added as a database MCP server `tandoor` (LiteLLM's admin page
+or Whoopy's page, F-M-13), over `http`, Bearer auth, every key. Install, upgrade and
 anything written to the live Tandoor need the author's go-ahead.
 
 ### F-M-2 · update a recipe, the shopping list and the meal plan
@@ -75,6 +120,19 @@ Two ways, to be chosen:
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
 ## Tests
+
+### T-M-11 · the page's MCP section through the portal
+
+`todo` `playtest` `filed 2026-11-22` `needs: F-M-13`
+
+**Do:** after asking to upgrade, open `/` through the portal signed out of
+`/ui/`, then signed in; add a test server, call it with a key, remove it.
+**Pass:** signed out, a sign-in message and no form; signed in, the servers
+listed with `whoopy` marked from the package; the added server answers at
+`/mcp/<name>`; removed, it is gone from the list and the route.
+**Last:** 2026-11-22, offline only: the page from the working tree, the
+listing from the live LiteLLM, writes recorded not sent; sign-in message,
+list, add (Bearer and body right) and remove pass.
 
 ### T-M-10 · the MCP routes refuse the internet and answer the LAN
 

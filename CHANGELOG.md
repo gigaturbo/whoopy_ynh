@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0~ynh5 (2026-11-22)
+
+- [x] **PKG** web search and documents leave the package and its panel: they, and any other MCP server or model, are added in LiteLLM's admin page
+- [x] **FEAT** the status page lists, adds and removes MCP servers, with the admin page's sign-in
+- [x] **DOC** how to add an MCP server, from the status page, the admin page or the API
+
 ## 0.2.0~ynh4 (2026-11-22)
 
 - [x] **FEAT** the MCP routes answer the local networks only, set in the panel's LAN ranges; 403 from the internet
