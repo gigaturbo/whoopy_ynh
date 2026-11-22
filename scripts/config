@@ -151,7 +151,7 @@ run__wake_now() {
     fi
 }
 
-run__rotate_master_key() {
+run__new_master_key() {
     # In an action, a field not in the button's section holds its old value,
     # and for the bind = "null" secrets that is the YNH_NULL marker: read
     # them from the settings.

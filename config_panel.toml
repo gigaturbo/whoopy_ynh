@@ -161,7 +161,7 @@ name = "Whoopy"
     [main.master_key]
     name = "Master key"
 
-        [main.master_key.rotate_master_key]
+        [main.master_key.new_master_key]
         ask = "Replace the master key"
         type = "button"
         style = "warning"

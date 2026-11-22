@@ -100,4 +100,9 @@ sudo yunohost app config set whoopy main.access.lan_ranges -v "127.0.0.0/8 ::1 1
 ## Master key
 
 **Replace the master key** makes a new one. Scripts using the old master key
-stop working; tokens made in the admin page keep working.
+stop working; tokens made in the admin page keep working. From the command
+line:
+
+```bash
+sudo yunohost app action run whoopy main.master_key.new_master_key
+```

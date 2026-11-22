@@ -10,7 +10,8 @@ upgrading this app touches a running service and a database, so ask first.
 
 - `manifest.toml`, `scripts/`: packaging format 2, helpers 2.1. Shared steps in
   `scripts/_common.sh`. `config_panel.toml` and `scripts/config` hold every
-  setting that changes after install, and the two buttons.
+  setting that changes after install, and the two buttons (`wake_now`,
+  `new_master_key`).
 - `conf/requirements.in` → `conf/requirements.txt`: the hash-locked wheels.
   The re-lock command is at the top of `requirements.in`.
 - `conf/config.yaml` (jinja): LiteLLM's config. No secret in it.
