@@ -26,47 +26,37 @@ Always on, for any token.
 
 Only `whoopy-wake` wakes the machine.
 
-## Web search (`/mcp/web`)
+## Adding an MCP server
 
-Needs the cheruby-search-mcp app, its token in the panel and the switch on
-(see [Configuration](config.md#web-search)). Any token may use it. Arguments
-are in that app's
-[MCP tools](https://github.com/gigaturbo/cheruby-search-mcp_ynh/blob/main/doc/mcp.md).
+Any other MCP server, such as an app on this machine that publishes its own
+on loopback, is added on Whoopy's status page (MCP servers), or in LiteLLM's
+admin page (`/ui/`, MCP Servers) for the finer settings, never in the
+package. The status page acts with your admin page session: sign in to `/ui/`
+first. Both work from the LAN ranges only.
 
-| Tool | Does |
-|---|---|
-| `web-search` | a web search through that app's private SearXNG |
-| `web-fetch` | one public page, as text |
+- **Address:** its Streamable HTTP URL, e.g. `http://127.0.0.1:<port>/mcp`.
+- **Authentication:** Bearer token, the one that app gives. LiteLLM stores it
+  encrypted in its database.
+- **Who:** every key, or only the keys it is granted to (per key in the
+  admin page, the key's MCP servers).
 
-Never wakes the Ollama machine.
+It is then served at `/mcp/<name>`, its tools named `<server>-<tool>`. A
+server that runs on the Ollama machine does not wake it: only `/mcp/whoopy`
+does.
 
-## Documents (`/mcp/docs`)
+The same can be done with the API, as an admin, from the LAN ranges:
 
-Needs the cheruby-docs-mcp app, its token in the panel and the switch on (see
-[Configuration](config.md#documents)). Serves the folders that app opens to
-Whoopy's token. Arguments are in that app's
-[MCP tools](https://github.com/gigaturbo/cheruby-docs-mcp_ynh/blob/main/doc/mcp.md).
+```bash
+curl https://<domain>/v1/mcp/server -H "Authorization: Bearer <master key>" \
+  -H "Content-Type: application/json" -d @server.json
+```
 
-| Tool | Does |
-|---|---|
-| `docs-list_folder` | a folder's subfolders and files |
-| `docs-find_files` | files whose path holds every word |
-| `docs-read_file` | a text, PDF, office file or image |
-| `docs-search_documents` | the passages that best answer a question |
-| `docs-write_file` | creates a text file, in a folder marked writable |
-| `docs-create_folder` | creates a folder, in a folder marked writable |
-| `docs-run_index` | asks for an index run, of some files or all |
+where `server.json` holds `server_name`, `url`, `"transport": "http"`,
+`"auth_type": "bearer_token"`, `"credentials": {"auth_value": "<token>"}` and
+`allow_all_keys`. A `server_id` given there is kept: keys granted a server
+keep their grant when it is re-created with the same id.
 
-Only keys granted `docs` reach it. Grant it per key in LiteLLM's admin page
-(`/ui/`, the key's MCP servers).
-
-## Other apps
-
-Apps that publish their own MCP server on this machine, such as flambyno and
-oshawyt, are not set up by the package. Add each in LiteLLM's admin page
-(`/ui/`, MCP Servers) with its loopback address and the token its
-`<app> token` command shows, then grant it to chosen keys. Its tools are then
-named `<server>-<tool>` like the ones above.
+Database servers travel in Whoopy's backup with the rest of the database.
 
 ## All of them (`/mcp`)
 

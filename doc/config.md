@@ -39,36 +39,6 @@ sudo yunohost app config set whoopy main.wol.wol_mac -v aa:bb:cc:dd:ee:ff
 Shows the wake service's state. **Wake it now** sends the wake packet and
 waits for Ollama, with the saved MAC, broadcast and timeout.
 
-## Web search
-
-| Key | Default | Effect |
-|---|---|---|
-| `main.search.search_enabled` | off | offer [web search](mcp.md#web-search-mcpweb) at `/mcp/web` |
-| `main.search.search_url` | `http://127.0.0.1:8772/mcp` | the cheruby-search-mcp app's MCP server |
-| `main.search.search_token` | kept | a new token; empty keeps the current one |
-
-The token comes from that app, which also makes a new one with `--new`:
-
-```bash
-sudo cheruby-search-mcp token
-```
-
-## Documents
-
-| Key | Default | Effect |
-|---|---|---|
-| `main.docs.docs_enabled` | off | offer [documents](mcp.md#documents-mcpdocs) at `/mcp/docs` and `embeddinggemma` |
-| `main.docs.docs_url` | `http://127.0.0.1:8770/mcp` | the cheruby-docs-mcp app's MCP server |
-| `main.docs.docs_embed_url` | `http://127.0.0.1:8771/v1` | its embedding model; empty: no `embeddinggemma` |
-| `main.docs.docs_token` | kept | a new token; empty keeps the current one |
-
-That app decides which folders its Whoopy token opens. The token comes from
-that app, which also makes a new one with `--new`:
-
-```bash
-sudo cheruby-docs-mcp token
-```
-
 ## Access
 
 | Key | Default | Effect |

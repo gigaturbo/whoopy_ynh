@@ -17,8 +17,8 @@ the machine by Wake-on-LAN when a request arrives.
   button, and tabs to LiteLLM's admin page and the API reference.
 - **The Ollama machine as MCP tools** at `/mcp/whoopy`: wake it ahead of
   time, see its state, list its models.
-- **Web search for the models** at `/mcp/web`, with the cheruby-search-mcp app.
-- **Your documents for the models** at `/mcp/docs`, with the cheruby-docs-mcp app.
+- **Any other MCP server** on the network, added from the status page and
+  served at `/mcp/<name>` behind the same tokens.
 - **MCP for the local network only**: the tool routes answer 403 from the
   internet, while the LLM API stays open to any token.
 - **Confined by default**: no internet, root-owned code, a pinned and
@@ -52,12 +52,12 @@ curl https://<domain>/v1/chat/completions \
 
 - [API and access](doc/api.md): the paths, who reaches each, the model names
 - [Configuration](doc/config.md): every setting in the config panel
-- [MCP servers](doc/mcp.md): the tools at `/mcp/whoopy`, `/mcp/web`, `/mcp/docs`
+- [MCP servers](doc/mcp.md): the tools at `/mcp/whoopy`, and adding others
 - [Security](doc/security.md): how the app is confined
 
 ## Latest release
 
-**0.2.0~ynh4** (2026-11-22). See the [changelog](CHANGELOG.md) for what changed.
+**0.2.0~ynh5** (2026-11-22). See the [changelog](CHANGELOG.md) for what changed.
 
 ## License
 

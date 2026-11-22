@@ -24,7 +24,8 @@ login is user `admin` with the password set at install or in the
 ## The status page
 
 `/` shows whether the Ollama machine is awake, its last wake, and a Wake
-button. Its tabs open LiteLLM's admin page (`/ui/`) and the API reference
+button. Below it, the [MCP servers](mcp.md#adding-an-mcp-server): listed,
+added and removed, once signed in to the admin page. Its tabs open LiteLLM's admin page (`/ui/`) and the API reference
 (`/docs`).
 
 ## Models
@@ -33,7 +34,7 @@ button. Its tabs open LiteLLM's admin page (`/ui/`) and the API reference
 |---|---|
 | `ollama/<name>` | every chat model Ollama has |
 | `ollama-embed/<name>` | the same machine's embedding models |
-| `embeddinggemma` | the cheruby-docs-mcp app's embedding model, when [documents](mcp.md#documents-mcpdocs) are on |
+| anything else | the models added in LiteLLM's admin page (`/ui/`, Models) |
 
 While the Ollama machine sleeps, `/v1/models` lists none of its models. A
 listing is cached for 5 minutes, so they appear up to 5 minutes after a wake.
