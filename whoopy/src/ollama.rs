@@ -1,6 +1,10 @@
-//! The Ollama machine: its HTTP API and its Wake-on-LAN address.
+//! The Ollama machine: its HTTP API and its Wake-on-LAN packet.
 
-use std::{io, net::SocketAddr, time::Duration};
+use std::{
+    io,
+    net::{Ipv4Addr, SocketAddr},
+    time::Duration,
+};
 
 use serde::Deserialize;
 
@@ -14,9 +18,6 @@ const MAX_MODELS: usize = 200;
 pub struct Ollama {
     /// scheme://host:port, no path, no trailing slash.
     url: String,
-    /// The setting as typed, for the error when it does not parse.
-    mac: String,
-    broadcast: SocketAddr,
     http: reqwest::Client,
 }
 
@@ -31,15 +32,13 @@ struct Model {
 }
 
 impl Ollama {
-    pub fn new(url: &str, mac: &str, broadcast: SocketAddr) -> Self {
+    pub fn new(url: &str) -> Self {
         let http = reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .expect("an HTTP client with no TLS always builds");
         Self {
             url: url.trim_end_matches('/').into(),
-            mac: mac.into(),
-            broadcast,
             http,
         }
     }
@@ -84,12 +83,12 @@ impl Machine for Ollama {
         resp.is_ok_and(|r| r.status().is_success())
     }
 
-    fn send_packet(&self) -> io::Result<()> {
-        if self.mac.is_empty() {
+    fn send_packet(&self, mac: &str, broadcast: Ipv4Addr) -> io::Result<()> {
+        if mac.is_empty() {
             return Err(io::Error::other("no MAC address is saved"));
         }
-        let mac = parse_mac(&self.mac)
-            .ok_or_else(|| io::Error::other(format!("not a MAC address: {:?}", self.mac)))?;
-        send_magic_packet(mac, self.broadcast)
+        let mac = parse_mac(mac)
+            .ok_or_else(|| io::Error::other(format!("not a MAC address: {mac:?}")))?;
+        send_magic_packet(mac, SocketAddr::new(broadcast.into(), 9))
     }
 }

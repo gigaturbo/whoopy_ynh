@@ -2,18 +2,18 @@
 //!
 //! `whoopy serve` is the daemon (whoopy-wake.service). `wake` and `status`
 //! ask it over its socket, so every wake, from the panel or a request, is the
-//! same shared wake. Settings come from the WHOOPY_* variables in wake.env.
+//! same shared wake. Its addresses come from the WHOOPY_* variables in
+//! wake.env; the wake settings from the file the status page writes.
 
 mod mcp;
 mod ollama;
 mod serve;
+mod settings;
 mod wake;
 
 use std::{
-    net::{IpAddr, SocketAddr},
     path::{Path, PathBuf},
     process::ExitCode,
-    time::Duration,
 };
 
 use clap::{Parser, Subcommand};
@@ -52,17 +52,9 @@ struct ServeArgs {
     /// Ollama, scheme://host:port with no path.
     #[arg(long, env = "WHOOPY_OLLAMA_URL")]
     ollama_url: String,
-    /// "1" wakes the machine for requests; a manual wake works either way.
-    #[arg(long, env = "WHOOPY_WOL_ENABLED", default_value = "0")]
-    wol_enabled: String,
-    #[arg(long, env = "WHOOPY_WOL_MAC", default_value = "")]
-    wol_mac: String,
-    /// Where the wake packet goes, on UDP port 9.
-    #[arg(long, env = "WHOOPY_WOL_BROADCAST", default_value = "255.255.255.255")]
-    wol_broadcast: IpAddr,
-    /// How long Ollama has to answer before a wake fails.
-    #[arg(long, env = "WHOOPY_WAKE_TIMEOUT_S", default_value_t = 90)]
-    wake_timeout_s: u64,
+    /// The wake settings' JSON file; the defaults while it does not exist.
+    #[arg(long, env = "WHOOPY_SETTINGS")]
+    settings: PathBuf,
     /// The MCP server's loopback port; none without it. Its token is read
     /// from WHOOPY_MCP_TOKEN only, never from the command line.
     #[arg(long, env = "WHOOPY_MCP_PORT")]
@@ -101,20 +93,18 @@ async fn serve(args: ServeArgs, socket: &Path) -> Result<(), String> {
             Some(serve::Mcp { port, token })
         }
     };
-    let ollama = ollama::Ollama::new(
-        &args.ollama_url,
-        &args.wol_mac,
-        SocketAddr::new(args.wol_broadcast, 9),
-    );
-    let waker = wake::Waker::new(
-        ollama,
-        args.wol_enabled == "1",
-        Duration::from_secs(args.wake_timeout_s),
-    );
+    // A file the page would refuse stops the start: the wake must not
+    // quietly fall back to off.
+    let settings = settings::Settings::load(&args.settings)?;
+    let waker = wake::Waker::new(ollama::Ollama::new(&args.ollama_url), settings);
     let web = args
         .web_port
         .zip(args.web_page)
-        .map(|(port, page)| serve::Web { port, page });
+        .map(|(port, page)| serve::Web {
+            port,
+            page,
+            settings: args.settings,
+        });
     serve::run(waker, socket, mcp, web).await
 }
 

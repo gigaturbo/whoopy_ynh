@@ -7,13 +7,15 @@
 
 use std::{
     io,
-    net::{SocketAddr, UdpSocket},
+    net::{Ipv4Addr, SocketAddr, UdpSocket},
     sync::{Arc, Mutex},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use serde::Serialize;
 use tokio::{sync::watch, time::Instant};
+
+use crate::settings::Settings;
 
 pub const POLL: Duration = Duration::from_secs(2);
 // One UDP packet can be lost, and a machine still finishing a suspend ignores
@@ -26,7 +28,7 @@ pub const DOWN: Duration = Duration::from_secs(15);
 pub trait Machine: Send + Sync + 'static {
     /// True when Ollama answers. Must load no model.
     fn up(&self) -> impl Future<Output = bool> + Send;
-    fn send_packet(&self) -> io::Result<()>;
+    fn send_packet(&self, mac: &str, broadcast: Ipv4Addr) -> io::Result<()>;
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq)]
@@ -48,9 +50,8 @@ pub struct LastWake {
 
 pub struct Waker<M> {
     machine: M,
-    /// Requests wake only when this is on; a manual wake ignores it.
-    enabled: bool,
-    timeout: Duration,
+    /// Read at each wake, so a change applies to the next one.
+    settings: Mutex<Settings>,
     state: Mutex<State>,
 }
 
@@ -63,11 +64,10 @@ struct State {
 }
 
 impl<M: Machine> Waker<M> {
-    pub fn new(machine: M, enabled: bool, timeout: Duration) -> Arc<Self> {
+    pub fn new(machine: M, settings: Settings) -> Arc<Self> {
         Arc::new(Self {
             machine,
-            enabled,
-            timeout,
+            settings: Mutex::new(settings),
             state: Mutex::default(),
         })
     }
@@ -76,8 +76,13 @@ impl<M: Machine> Waker<M> {
         &self.machine
     }
 
-    pub fn enabled(&self) -> bool {
-        self.enabled
+    pub fn settings(&self) -> Settings {
+        self.settings.lock().unwrap().clone()
+    }
+
+    /// A wake already running keeps the settings it started with.
+    pub fn set_settings(&self, settings: Settings) {
+        *self.settings.lock().unwrap() = settings;
     }
 
     pub fn waking(&self) -> bool {
@@ -93,7 +98,7 @@ impl<M: Machine> Waker<M> {
     /// asked for by hand (panel, CLI, MCP): it runs even when waking on
     /// requests is off. A caller that gives up does not cancel the wake.
     pub async fn ensure_awake(self: &Arc<Self>, manual: bool) -> Outcome {
-        if !manual && !self.enabled {
+        if !manual && !self.settings().wol_enabled {
             return Outcome {
                 ok: true,
                 seconds: 0,
@@ -147,16 +152,21 @@ impl<M: Machine> Waker<M> {
         let started = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_or(0, |d| d.as_secs());
+        let settings = self.settings();
+        let timeout = Duration::from_secs(settings.wake_timeout_s);
         let start = Instant::now();
         let mut last_sent: Option<Instant> = None;
-        let mut reason = format!("Ollama did not answer within {} s", self.timeout.as_secs());
-        while start.elapsed() < self.timeout {
+        let mut reason = format!("Ollama did not answer within {} s", timeout.as_secs());
+        while start.elapsed() < timeout {
             if self.machine.up().await {
                 reason.clear();
                 break;
             }
             if last_sent.is_none_or(|t| t.elapsed() >= RESEND) {
-                if let Err(err) = self.machine.send_packet() {
+                if let Err(err) = self
+                    .machine
+                    .send_packet(&settings.wol_mac, settings.wol_broadcast)
+                {
                     reason = format!("the wake packet could not be sent: {err}");
                     break;
                 }
@@ -249,7 +259,7 @@ mod tests {
             let n = self.probes.fetch_add(1, Ordering::SeqCst);
             self.up_after.is_some_and(|k| n >= k)
         }
-        fn send_packet(&self) -> io::Result<()> {
+        fn send_packet(&self, _: &str, _: Ipv4Addr) -> io::Result<()> {
             if self.send_fails {
                 return Err(io::Error::other("no route"));
             }
@@ -260,9 +270,17 @@ mod tests {
 
     const T: Duration = Duration::from_secs(90);
 
+    fn tuned(enabled: bool) -> Settings {
+        Settings {
+            wol_enabled: enabled,
+            wake_timeout_s: T.as_secs(),
+            ..Settings::default()
+        }
+    }
+
     #[tokio::test(start_paused = true)]
     async fn wakes_and_shares_one_wake() {
-        let w = Waker::new(Fake::new(Some(5)), true, T);
+        let w = Waker::new(Fake::new(Some(5)), tuned(true));
         let (a, b) = tokio::join!(w.ensure_awake(false), w.ensure_awake(false));
         assert!(a.ok && b.ok);
         assert_eq!(w.machine().probes.load(Ordering::SeqCst), 6);
@@ -275,14 +293,14 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn resends_every_resend_interval() {
         // Up after 40 s of probes every 2 s: packets at 0, 15, 30 s.
-        let w = Waker::new(Fake::new(Some(20)), true, T);
+        let w = Waker::new(Fake::new(Some(20)), tuned(true));
         assert!(w.ensure_awake(false).await.ok);
         assert_eq!(w.machine().packets.load(Ordering::SeqCst), 3);
     }
 
     #[tokio::test(start_paused = true)]
     async fn fails_after_timeout_then_fails_fast() {
-        let w = Waker::new(Fake::new(None), true, T);
+        let w = Waker::new(Fake::new(None), tuned(true));
         let out = w.ensure_awake(false).await;
         assert!(!out.ok);
         assert!(out.seconds >= T.as_secs());
@@ -300,7 +318,7 @@ mod tests {
     async fn a_failed_send_stops_the_wake() {
         let mut fake = Fake::new(None);
         fake.send_fails = true;
-        let w = Waker::new(fake, true, T);
+        let w = Waker::new(fake, tuned(true));
         let out = w.ensure_awake(true).await;
         assert!(!out.ok && out.reason.contains("could not be sent"));
         assert_eq!(out.seconds, 0);
@@ -308,7 +326,7 @@ mod tests {
 
     #[tokio::test(start_paused = true)]
     async fn disabled_skips_requests_not_manual_wakes() {
-        let w = Waker::new(Fake::new(Some(1)), false, T);
+        let w = Waker::new(Fake::new(Some(1)), tuned(false));
         assert!(w.ensure_awake(false).await.ok);
         assert_eq!(w.machine().probes.load(Ordering::SeqCst), 0);
         assert!(w.ensure_awake(true).await.ok);
@@ -317,7 +335,7 @@ mod tests {
 
     #[tokio::test(start_paused = true)]
     async fn a_dropped_caller_does_not_cancel_the_wake() {
-        let w = Waker::new(Fake::new(Some(3)), true, T);
+        let w = Waker::new(Fake::new(Some(3)), tuned(true));
         let _ = tokio::time::timeout(Duration::from_secs(1), w.ensure_awake(false)).await;
         assert!(w.ensure_awake(false).await.ok);
         assert_eq!(w.machine().packets.load(Ordering::SeqCst), 1);
@@ -325,7 +343,7 @@ mod tests {
 
     #[tokio::test(start_paused = true)]
     async fn a_manual_wake_ignores_a_recent_failure() {
-        let w = Waker::new(Fake::new(None), true, T);
+        let w = Waker::new(Fake::new(None), tuned(true));
         assert!(!w.ensure_awake(false).await.ok);
         let packets = w.machine().packets.load(Ordering::SeqCst);
         w.ensure_awake(true).await;
@@ -334,7 +352,7 @@ mod tests {
 
     #[tokio::test(start_paused = true)]
     async fn a_plain_check_keeps_the_last_wake() {
-        let w = Waker::new(Fake::new(Some(4)), true, T);
+        let w = Waker::new(Fake::new(Some(4)), tuned(true));
         assert!(w.ensure_awake(false).await.ok);
         let woke = w.last().unwrap().outcome.seconds;
         assert!(woke >= 8);
@@ -342,6 +360,20 @@ mod tests {
         tokio::time::sleep(FRESH).await;
         assert!(w.ensure_awake(false).await.ok);
         assert_eq!(w.last().unwrap().outcome.seconds, woke);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn new_settings_apply_to_the_next_wake() {
+        let w = Waker::new(Fake::new(None), tuned(false));
+        assert!(w.ensure_awake(false).await.ok);
+        assert_eq!(w.machine().probes.load(Ordering::SeqCst), 0);
+        w.set_settings(Settings {
+            wake_timeout_s: 20,
+            ..tuned(true)
+        });
+        let out = w.ensure_awake(false).await;
+        assert!(!out.ok && out.reason.contains("within 20 s"), "{out:?}");
+        assert!(out.seconds >= 20 && out.seconds < 30);
     }
 
     #[test]

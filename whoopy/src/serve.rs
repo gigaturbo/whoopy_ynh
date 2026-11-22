@@ -5,12 +5,15 @@
 //!   POST /ensure  a request is about to reach Ollama; wakes only if enabled
 //!   POST /wake    a wake asked for by hand; runs even when disabled
 //!   GET  /status  awake or not, waking, the last wake
+//!   GET  /settings  the wake settings; the hook reads keep_alive there
 //! /ensure and /wake answer 200 once Ollama answers, 503 when the wake fails.
 //!
-//! Page routes, behind the portal's admin permission through nginx:
-//!   GET  /               the page (WHOOPY_WEB_PAGE)
-//!   GET  /whoopy/status  as the socket's /status
-//!   POST /whoopy/wake    as the socket's /wake; needs the header X-Whoopy: 1
+//! Page routes, behind the portal's main permission through nginx:
+//!   GET  /                 the page (WHOOPY_WEB_PAGE)
+//!   GET  /whoopy/status    as the socket's /status
+//!   POST /whoopy/wake      as the socket's /wake; needs the header X-Whoopy: 1
+//!   GET  /whoopy/settings  as the socket's /settings
+//!   POST /whoopy/settings  checks, saves and applies them; needs X-Whoopy: 1
 
 use std::{
     future::IntoFuture,
@@ -21,8 +24,8 @@ use std::{
 };
 
 use axum::{
-    Json, Router,
-    extract::{Request, State},
+    Extension, Json, Router,
+    extract::{Request, State, rejection::JsonRejection},
     http::{HeaderMap, StatusCode, header},
     middleware::{self, Next},
     response::{IntoResponse, Response},
@@ -37,6 +40,7 @@ use tokio::net::{TcpListener, UnixListener};
 use crate::{
     mcp::Tools,
     ollama::Ollama,
+    settings::Settings,
     wake::{Machine, Outcome, Waker},
 };
 
@@ -53,6 +57,8 @@ pub struct Mcp {
 pub struct Web {
     pub port: u16,
     pub page: PathBuf,
+    /// Where a change made on the page is saved.
+    pub settings: PathBuf,
 }
 
 pub async fn run(
@@ -77,6 +83,7 @@ pub async fn run(
         .route("/ensure", post(ensure))
         .route("/wake", post(wake))
         .route("/status", get(status))
+        .route("/settings", get(settings))
         .with_state(Arc::clone(&waker));
     let local = axum::serve(unix, local).with_graceful_shutdown(shutdown());
 
@@ -110,8 +117,13 @@ pub async fn run(
 
     let page = match web {
         None => None,
-        Some(Web { port, page }) => {
+        Some(Web {
+            port,
+            page,
+            settings: file,
+        }) => {
             let page: Arc<Path> = page.into();
+            let file: Arc<Path> = file.into();
             let app = Router::new()
                 .route("/", get(move || send_page(Arc::clone(&page))))
                 .route("/whoopy/status", get(status))
@@ -119,6 +131,12 @@ pub async fn run(
                     "/whoopy/wake",
                     post(wake).layer(middleware::from_fn(require_page_header)),
                 )
+                .route(
+                    "/whoopy/settings",
+                    get(settings)
+                        .merge(post(save_settings).layer(middleware::from_fn(require_page_header))),
+                )
+                .layer(Extension(file))
                 .with_state(Arc::clone(&waker));
             started += &format!(", page at http://127.0.0.1:{port}/");
             Some(serve_tcp(port, app).await?)
@@ -231,10 +249,40 @@ async fn wake(State(w): State<Shared>) -> Response {
     answer(w.ensure_awake(true).await)
 }
 
+async fn settings(State(w): State<Shared>) -> Json<Settings> {
+    Json(w.settings())
+}
+
+/// Saved before applied: what runs is always what a restart would load.
+/// A refusal is 400 with the reason as plain text, for the page to show.
+async fn save_settings(
+    State(w): State<Shared>,
+    Extension(file): Extension<Arc<Path>>,
+    body: Result<Json<Settings>, JsonRejection>,
+) -> Response {
+    let Json(new) = match body {
+        Ok(body) => body,
+        Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+    };
+    if let Err(why) = new.check() {
+        return (StatusCode::BAD_REQUEST, why).into_response();
+    }
+    if let Err(e) = new.save(&file) {
+        eprintln!("whoopy: {}: {e}", file.display());
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "The settings could not be saved.",
+        )
+            .into_response();
+    }
+    w.set_settings(new.clone());
+    Json(new).into_response()
+}
+
 async fn status(State(w): State<Shared>) -> Response {
     let up = w.machine().up().await;
     Json(json!({
-        "enabled": w.enabled(),
+        "enabled": w.settings().wol_enabled,
         "up": up,
         "waking": w.waking(),
         "last": w.last(),
