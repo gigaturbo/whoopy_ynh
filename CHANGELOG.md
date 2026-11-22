@@ -5,6 +5,7 @@
 - [x] **FEAT** the MCP routes answer the local networks only, set in the panel's LAN ranges; 403 from the internet
 - [x] **PKG** the master key button is now `new_master_key`, like every other rotation button
 - [x] **DOC** the user manual moves from the README into `doc/`
+- [x] **DOC** every gateway tool is named `<server>-<tool>`; the documents server's seven tools are listed
 
 ## 0.2.0~ynh3 (2026-11-21)
 

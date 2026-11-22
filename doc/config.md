@@ -47,10 +47,10 @@ waits for Ollama, with the saved MAC, broadcast and timeout.
 | `main.search.search_url` | `http://127.0.0.1:8772/mcp` | the cheruby-search-mcp app's MCP server |
 | `main.search.search_token` | kept | a new token; empty keeps the current one |
 
-The token comes from that app:
+The token comes from that app, which also makes a new one with `--new`:
 
 ```bash
-sudo yunohost app setting cheruby-search-mcp token
+sudo cheruby-search-mcp token
 ```
 
 ## Documents
@@ -62,10 +62,11 @@ sudo yunohost app setting cheruby-search-mcp token
 | `main.docs.docs_embed_url` | `http://127.0.0.1:8771/v1` | its embedding model; empty: no `embeddinggemma` |
 | `main.docs.docs_token` | kept | a new token; empty keeps the current one |
 
-The token decides which folders are served. It comes from that app:
+That app decides which folders its Whoopy token opens. The token comes from
+that app, which also makes a new one with `--new`:
 
 ```bash
-sudo yunohost app setting cheruby-docs-mcp token_<user>
+sudo cheruby-docs-mcp token
 ```
 
 ## Access

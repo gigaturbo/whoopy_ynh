@@ -92,12 +92,12 @@ name = "Whoopy"
         ask = "New token"
         type = "password"
         optional = true
-        help = "The one cheruby-search-mcp gives: sudo yunohost app setting cheruby-search-mcp token. Leave empty to keep the current one."
+        help = "The one cheruby-search-mcp gives: sudo cheruby-search-mcp token. Leave empty to keep the current one."
         bind = "null"
 
     [main.docs]
     name = "Documents"
-    help = "Folders, read-only, served by the cheruby-docs-mcp app: the ones it opens to the token below. Clients reach them at /mcp/docs, with a Whoopy key granted the docs server in LiteLLM's admin page. Its embedding model, EmbeddingGemma, is offered too, as embeddinggemma, to any key."
+    help = "Folders served by the cheruby-docs-mcp app, the ones it opens to the token below, read-only but for those it marks writable. Clients reach them at /mcp/docs, with a Whoopy key granted the docs server in LiteLLM's admin page. Its embedding model, EmbeddingGemma, is offered too, as embeddinggemma, to any key."
 
         [main.docs.docs_enabled]
         ask = "Offer documents through /mcp/docs"
@@ -125,7 +125,7 @@ name = "Whoopy"
         ask = "New token"
         type = "password"
         optional = true
-        help = "The one cheruby-docs-mcp gives for the folders to open: sudo yunohost app setting cheruby-docs-mcp token_<user>. Leave empty to keep the current one."
+        help = "The one cheruby-docs-mcp gives for the folders it opens to Whoopy: sudo cheruby-docs-mcp token. Leave empty to keep the current one."
         bind = "null"
 
     [main.access]
