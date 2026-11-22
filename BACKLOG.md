@@ -16,34 +16,6 @@ runtime.
 
 ## Features
 
-### F-M-12 · the MCP side apps become database servers, unnamed by Whoopy
-
-`doing` `medium` `filed 2026-11-22`
-
-Whoopy's package named cheruby-search-mcp and cheruby-docs-mcp: panel
-sections, settings, two tokens in `whoopy.env`, `web`, `docs` and
-`embeddinggemma` in `config.yaml`. Each new MCP app would have meant a new
-release of Whoopy.
-
-**Do:** drop all of it from the package (0.2.0~ynh5); the upgrade deletes the
-seven settings. Right after it, re-create `web` (every key), `docs` (its old
-`server_id`, granted keys only) and `embeddinggemma` in LiteLLM's database
-with the master key, the tokens read untraced from the apps. Owes T-M-7, the
-docs grant check, `embeddinggemma` 768 dimensions with the desktop asleep,
-T-M-8 and T-P-3.
-
-### F-M-13 · add an MCP server from Whoopy's page
-
-`doing` `medium` `filed 2026-11-22` `needs: F-M-12`
-
-Adding a server in LiteLLM's admin page means a long form.
-
-**Do:** a section on the status page lists the database MCP servers, adds one
-(name, address, Bearer token, every key or not) and removes one, calling
-`/v1/mcp/server` from the browser with LiteLLM's own `token` sign-in cookie,
-as its dashboard does. No secret reaches the wake daemon. Signed out of
-`/ui/`: a link to sign in. A Playwright check through the portal.
-
 ### F-P-9 · wake tuning moves from the panel to Whoopy's page
 
 `todo` `large` `filed 2026-11-22`
@@ -121,6 +93,19 @@ Two ways, to be chosen:
 
 ## Tests
 
+### T-P-3 · backup, remove, restore
+
+`todo` `playtest` `reopened 2026-11-22` `needs: F-M-12`
+
+**Do:** after asking, back up, remove and restore Whoopy.
+**Pass:** both services up; the settings, master key and MCP token identical
+(fingerprints, never printed); `/v1/models` and `/mcp/whoopy` answer; and,
+new since 0.2.0~ynh5, the database servers `web` and `docs` (same ids) and
+the model `embeddinggemma` are back and answer, their stored tokens readable.
+**Last:** 2026-11-20 at `d9779d4`, pass: 91 s down, the 18 keys, master key
+and MCP token identical, `/v1/models` and `/mcp/whoopy` answer; no stored
+credential or model in the database then.
+
 ### T-M-11 · the page's MCP section through the portal
 
 `todo` `playtest` `filed 2026-11-22` `needs: F-M-13`
@@ -189,6 +174,8 @@ the result is to the house rules.
 
 ## Closed
 
+- `F-M-12` done 2026-11-22 · the package names no side app: web search, documents and `embeddinggemma` left the panel, the settings and `config.yaml` (0.2.0~ynh5, upgraded 2026-11-22); re-created in LiteLLM's database, `docs` with its old id: `/mcp/web` 401 without a token and searched with an ordinary key, `/mcp/docs` refused an ordinary key and listed its seven tools to a granted one, `embeddinggemma` 768 dimensions in 0.2 s with the desktop asleep, `/mcp/whoopy` lists its three tools; no token in YunoHost's logs. T-P-3 reopened
+- `F-M-13` done 2026-11-22 · the status page lists, adds and removes MCP servers with the admin page's sign-in cookie (0.2.0~ynh5); checked offline in a browser against the live listing, T-M-11 open for the portal run
 - `F-M-11` done 2026-11-22 · the gateway docs name every tool `<server>-<tool>`, as LiteLLM lists them (separator `-`); `/mcp/docs` lists its seven tools, write ones included, and links each side app's own `doc/mcp.md`
 - `F-P-8` done 2026-11-22 · the master key button is `new_master_key`, like the side apps' `new_token`; also run as `yunohost app action run whoopy main.master_key.new_master_key`
 - `F-M-9` done 2026-11-22 · the MCP routes (`/mcp`, `/mcp-rest`, `/v1/mcp`, `/<server>/mcp`, `/toolset/*/mcp`, `/public/mcp_hub`, `/api/v1/inspect/mcp`, and `/ui/mcp/`) answer only the panel's `lan_ranges`, 403 elsewhere; checked on a throwaway nginx against the live LiteLLM (0.2.0~ynh4, not yet installed: T-M-10)
@@ -201,7 +188,6 @@ the result is to the house rules.
 - `T-P-4` done `playtest` 2026-11-20 at `d19ad98` · status line asleep, Wake now "Ollama answers, 10 s after the wake request" in 13 s, then awake with "Last wake: answered after 10 s"; the daemon-down reading passed at `d9779d4`
 - `F-P-6` done 2026-11-20 · the wake, the panel's Wake button and an MCP server (`wake`, `status`, `models` at `/mcp/whoopy`) in one Rust daemon, `whoopy-wake.service`, the hook its client (0.1.0~ynh1, released as `whoopy-0.1.0`); T-W-1, T-W-2, T-P-3, T-P-4, T-M-8 passed; `tests/wake-playtest.sh` reruns the wake tests
 - `T-M-8` done `playtest` 2026-11-20 at `d9779d4` · `/mcp/whoopy`: 401 without a token and no portal redirect; with the master key `whoopy-wake`, `whoopy-status`, `whoopy-models` listed and each answered in under 0.2 s; the daemon's loopback port 401 without its token
-- `T-P-3` done `playtest` 2026-11-20 at `d9779d4` · backup, remove, restore: 91 s down, both services up, the 18 keys, master key and MCP token identical (fingerprints), `/v1/models` and `/mcp/whoopy` answer; no stored credential or model in the database to compare
 - `F-P-4` done 2026-11-19 · the redrawn icon set from ynh-app-icons 0ca6205: `conf/logo.png`, the six favicons in `conf/icons/` and `doc/logo.svg` replaced, `logo_update/` deleted (~ynh13)
 - `F-P-3` done 2026-11-19 · the desktop's embedding models as `ollama-embed/<name>`, LiteLLM's `ollama` provider at Ollama's address (~ynh12, upgraded 2026-11-19): `ollama/<name>` answered 400 to an embedding; through the new route 768 dimensions in 4 s, and cheruby-docs-mcp indexed 333 files in 3 min 47 s with it
 - `F-M-8` done 2026-11-10 · the side apps are reached by an address and a password-type token pasted in the panel, never by reading their settings (~ynh9); documents are one `docs` server at `/mcp/docs` whose id stays that of `docs_<user>`, so grants carried over; Rikka Hub reached it with its ordinary key once `_<user>` was dropped from its URL; `/mcp/web` and `embeddinggemma` answer
