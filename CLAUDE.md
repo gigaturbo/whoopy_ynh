@@ -9,9 +9,9 @@ upgrading this app touches a running service and a database, so ask first.
 ## Layout
 
 - `manifest.toml`, `scripts/`: packaging format 2, helpers 2.1. Shared steps in
-  `scripts/_common.sh`. `config_panel.toml` and `scripts/config` hold every
-  setting that changes after install, and the two buttons (`wake_now`,
-  `new_master_key`).
+  `scripts/_common.sh`. `config_panel.toml` and `scripts/config` hold the
+  root-only settings and the `new_master_key` button; the wake settings are
+  the daemon's, set on the status page.
 - `conf/requirements.in` → `conf/requirements.txt`: the hash-locked wheels.
   The re-lock command is at the top of `requirements.in`.
 - `conf/config.yaml` (jinja): LiteLLM's config. No secret in it.
@@ -35,7 +35,7 @@ upgrading this app touches a running service and a database, so ask first.
   (`port_mcp`), registered in LiteLLM as `whoopy`; the status page at `/`
   (`port_web`).
 - **The wake hook** (`conf/whoopy_wake.py`) runs inside LiteLLM and asks the
-  daemon over the socket. The panel's Wake button and status line call the
+  daemon over the socket. The status page's Wake button and the CLI call the
   same binary (`whoopy wake`, `whoopy status`).
 - **Code** in `/var/www/whoopy`, root-owned, group `whoopy` read-only: venv,
   `prisma/` (CLI, query engine, schema engine), `config/` (config.yaml and the
@@ -66,7 +66,7 @@ A new binary, the wake playtests and the advisory check: see `whoopy-kb`.
 The toolchain is rustup's, pinned by `whoopy/rust-toolchain.toml`.
 
 Set config panel values from the command line one key at a time:
-`yunohost app config set whoopy main.wol.wol_mac -v <value>`.
+`yunohost app config set whoopy main.access.lan_ranges -v <value>`.
 
 ## Packaging
 

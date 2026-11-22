@@ -1,12 +1,34 @@
 # Configuration
 
-Every setting that can change after install, in the app's config panel
-(webadmin: Applications, Whoopy, Configuration).
+Settings that change after install live in two places, split by who may
+change them.
 
-Set one from the command line, a key at a time:
+- **The status page** (`/`, Wake settings): how the wake behaves and how long
+  a model stays loaded. Anyone in the group allowed to open the page may
+  change them, and a change applies to the next request.
+- **The config panel** (webadmin: Applications, Whoopy, Configuration): what
+  guards Whoopy, root-only.
+
+## The status page
+
+| Setting | Default | Effect |
+|---|---|---|
+| Wake the Ollama machine | off | wake it when a request arrives and it does not answer |
+| MAC address | empty | its card with Wake-on-LAN enabled; needed to switch the wake on |
+| Broadcast address | `255.255.255.255` | where the wake packet goes; the subnet's own broadcast if the server has several networks |
+| Seconds to wait | `90` | 10 to 540; past it the request fails with a 503 |
+| How long a model stays loaded | empty | after a request through Whoopy, e.g. `5m`. Empty: Ollama's own setting. A request that sets `keep_alive` itself keeps its own. |
+
+The page's Wake button sends the wake packet and waits for Ollama, with
+these settings. They are kept in `/var/lib/whoopy/settings.json`, which
+Whoopy's backup carries.
+
+## The config panel
+
+Set a value from the command line, a key at a time:
 
 ```bash
-sudo yunohost app config set whoopy main.wol.wol_mac -v aa:bb:cc:dd:ee:ff
+sudo yunohost app config set whoopy main.access.lan_ranges -v "<ranges>"
 ```
 
 ## Install questions
@@ -23,21 +45,6 @@ sudo yunohost app config set whoopy main.wol.wol_mac -v aa:bb:cc:dd:ee:ff
 | Key | Default | Effect |
 |---|---|---|
 | `main.ollama.ollama_url` | set at install | Ollama's address, without a path. With outbound set to local networks, a private address. |
-| `main.ollama.keep_alive` | empty | how long a model stays loaded after a request, e.g. `5m`. Empty: Ollama's own setting. |
-
-## Wake-on-LAN
-
-| Key | Default | Effect |
-|---|---|---|
-| `main.wol.wol_enabled` | off | wake the machine when a request arrives and it does not answer |
-| `main.wol.wol_mac` | empty | MAC address of its card with Wake-on-LAN enabled |
-| `main.wol.wol_broadcast` | `255.255.255.255` | where the wake packet goes; the subnet's own broadcast if the server has several networks |
-| `main.wol.wake_timeout_s` | `90` | seconds to wait for Ollama after a wake, 10 to 540; past it the request fails with a 503 |
-
-## Wake now
-
-Shows the wake service's state. **Wake it now** sends the wake packet and
-waits for Ollama, with the saved MAC, broadcast and timeout.
 
 ## Access
 

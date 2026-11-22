@@ -34,8 +34,8 @@ Wake-on-LAN enabled on its card.
 sudo yunohost app install https://github.com/gigaturbo/whoopy_ynh
 ```
 
-Then set the machine's MAC address and switch the wake on in the
-[config panel](doc/config.md#wake-on-lan).
+Then set the machine's MAC address and switch the wake on, on the
+[status page](doc/config.md#the-status-page) at `/`.
 
 ## Usage
 
@@ -51,13 +51,13 @@ curl https://<domain>/v1/chat/completions \
 ## Documentation
 
 - [API and access](doc/api.md): the paths, who reaches each, the model names
-- [Configuration](doc/config.md): every setting in the config panel
+- [Configuration](doc/config.md): the wake settings on the status page, the rest in the config panel
 - [MCP servers](doc/mcp.md): the tools at `/mcp/whoopy`, and adding others
 - [Security](doc/security.md): how the app is confined
 
 ## Latest release
 
-**0.2.0~ynh5** (2026-11-22). See the [changelog](CHANGELOG.md) for what changed.
+**0.3.0~ynh1** (2026-11-22). See the [changelog](CHANGELOG.md) for what changed.
 
 ## License
 
