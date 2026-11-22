@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0~ynh1 (2026-11-22)
+
+- [x] **FEAT** the wake settings and how long a model stays loaded move from the config panel to the status page, and apply without a restart
+- [x] **PKG** the config panel keeps only the Ollama address, access and the master key; its Wake section goes, the page has one
+- [x] **FIX** the wake daemon's `url` dependency moves to 2.5.9 (RUSTSEC-2026-0592)
+
 ## 0.2.0~ynh5 (2026-11-22)
 
 - [x] **PKG** web search and documents leave the package and its panel: they, and any other MCP server or model, are added in LiteLLM's admin page

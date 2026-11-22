@@ -7,7 +7,7 @@ name = "Whoopy"
 description.en = "One authenticated AI endpoint in front of an Ollama that sleeps, woken on demand"
 description.fr = "Un point d'accès IA authentifié devant un Ollama qui dort, réveillé à la demande"
 
-version = "0.2.0~ynh5"
+version = "0.3.0~ynh1"
 
 maintainers = ["gigaturbo"]
 
@@ -66,8 +66,8 @@ ram.runtime = "1G"
     # The wake daemon and its CLI, built from whoopy/ and published as a
     # release asset of this repository: install never compiles.
     [resources.sources.whoopy]
-    arm64.url = "https://github.com/gigaturbo/whoopy_ynh/releases/download/whoopy-0.2.0/whoopy-aarch64-linux"
-    arm64.sha256 = "df813c4575880e31c4a5c9dd68c8e114b1dee4a3de6b87461ff18f0ff97a5068"
+    arm64.url = "https://github.com/gigaturbo/whoopy_ynh/releases/download/whoopy-0.3.0/whoopy-aarch64-linux"
+    arm64.sha256 = "cc9fe48a9159881d10dc43bf93486c5c7360f6b0f42c6832717ec78a30a48f4a"
     extract = false
     rename = "whoopy"
 
