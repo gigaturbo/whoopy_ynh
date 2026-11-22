@@ -81,7 +81,8 @@ read -r code secs body < <(chat "$model")
 n=$(resumes_since "$mark"); [ "$n" = 1 ]; check T-W-1 $? "$n resume(s) on the desktop"
 ka=$(curl -s -m 5 "$web/whoopy/settings" | jq -r .keep_alive)
 if [ -n "$ka" ]; then
-    want=$(( ${ka%?} * $(case ${ka: -1} in s) echo 1;; m) echo 60;; h) echo 3600;; esac) ))
+    case ${ka: -1} in s) unit=1 ;; m) unit=60 ;; h) unit=3600 ;; esac
+    want=$((${ka%?} * unit))
     left=$(( $(date -d "$(curl -s -m 5 "$ollama/api/ps" | jq -r '.models[0].expires_at')" +%s) - $(date +%s) ))
     [ $((want - left)) -ge 0 ] && [ $((want - left)) -lt 120 ]
     check T-W-1 $? "keep_alive $ka: the model unloads in $left s"

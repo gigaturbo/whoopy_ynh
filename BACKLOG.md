@@ -16,24 +16,6 @@ runtime.
 
 ## Features
 
-### F-P-9 · wake tuning moves from the panel to Whoopy's page
-
-`todo` `large` `filed 2026-11-22`
-
-The panel holds settings that only tune the wake. Its Save re-renders every
-file and restarts both services for a MAC address.
-
-**Do:** the panel keeps only what guards Whoopy (`ollama_url`, `outbound`,
-`lan_ranges`, `ui_password`, `env_login`, the master key button), since the
-page's settings are writable by user `whoopy`, which LiteLLM runs as too.
-`wol_enabled`, `wol_mac`, `wol_broadcast`, `wake_timeout_s` and `keep_alive`
-move to a Settings section of the page: the daemon keeps them in
-`/var/lib/whoopy/settings.json` (StateDirectory, backed up), applies them
-live, and hands `keep_alive` to the hook, which sets it per request. The hook
-waits the 540 s maximum; the `whoopy` MCP timeout is fixed at 550. The panel's
-Wake section goes too. The upgrade seeds the file from the old settings. A new
-binary; owes T-W-1, T-W-2, T-P-4, T-P-5, T-P-3.
-
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
 
 `todo` `large` `filed 2026-11-06`
@@ -174,6 +156,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `F-P-9` done 2026-11-22 · the wake settings and `keep_alive` moved from the panel to the status page, kept by the daemon in `/var/lib/whoopy/settings.json` and applied live (0.3.0~ynh1, released as `whoopy-0.3.0`, upgraded 2026-11-22): the upgrade carried the panel's values (on, MAC, 120 s) and dropped them; the panel holds five fields and the master key button; `tests/wake-playtest.sh` passed T-P-4 (page wake in 10 s), T-W-1 (chat 200 in 27 s, one resume, `keep_alive` 3m from the page: the model expired 180 s later) and T-W-2 (503 in 21 s, then 0 s) with settings changed through the page and no restart; `/mcp/whoopy`, `web`, `docs` list 3, 2, 7 tools after it
 - `F-M-12` done 2026-11-22 · the package names no side app: web search, documents and `embeddinggemma` left the panel, the settings and `config.yaml` (0.2.0~ynh5, upgraded 2026-11-22); re-created in LiteLLM's database, `docs` with its old id: `/mcp/web` 401 without a token and searched with an ordinary key, `/mcp/docs` refused an ordinary key and listed its seven tools to a granted one, `embeddinggemma` 768 dimensions in 0.2 s with the desktop asleep, `/mcp/whoopy` lists its three tools; no token in YunoHost's logs. T-P-3 reopened
 - `F-M-13` done 2026-11-22 · the status page lists, adds and removes MCP servers with the admin page's sign-in cookie (0.2.0~ynh5); checked offline in a browser against the live listing, T-M-11 open for the portal run
 - `F-M-11` done 2026-11-22 · the gateway docs name every tool `<server>-<tool>`, as LiteLLM lists them (separator `-`); `/mcp/docs` lists its seven tools, write ones included, and links each side app's own `doc/mcp.md`
