@@ -87,6 +87,11 @@ host off the network); also `/v1/models` from outside.
 **Pass:** LAN and VPN answer as before; outside gets a 403 on `/mcp/web`,
 `/v1/mcp/server` and `/ui/mcp/`; `/v1/models` from outside still 200 with
 the key.
+**Last:** 2026-11-22 at `65cd1dd`, 0.2.0~ynh4 installed: from the server
+through the domain with a key, `/mcp/web`, `/mcp/docs`, `/mcp/whoopy` list
+their tools; from an off-site host without a key, `/mcp/web`, `/mcp/`,
+`/v1/mcp/server`, `/mcp-rest/tools/list`, `/web/mcp` 403 and `/v1/models`
+401. Still to run: through the VPN, and `/v1/models` from outside with a key.
 
 ### T-M-1 · the compact format packs to Tandoor's JSON
 
