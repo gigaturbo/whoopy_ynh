@@ -44,6 +44,12 @@ validate__docs_enabled() {
     set -o xtrace
 }
 
+# The list lands in nginx's config: one address or network per entry.
+validate__lan_ranges() {
+    whoopy_lan_allow "${lan_ranges:-}" >/dev/null \
+        || echo "Addresses or networks separated by spaces, e.g. 192.168.0.0/16 fd00::/8."
+}
+
 # Turning the shared login off with no personal admin account would lock
 # everyone out of the admin page.
 validate__env_login() {
@@ -113,6 +119,7 @@ ynh_app_config_apply() {
     wol_broadcast=$(ynh_app_setting_get --key=wol_broadcast)
     wake_timeout_s=$(ynh_app_setting_get --key=wake_timeout_s)
     outbound=$(ynh_app_setting_get --key=outbound)
+    lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
     env_login=$(ynh_app_setting_get --key=env_login)
     search_enabled=$(ynh_app_setting_get --key=search_enabled)
     search_url=$(ynh_app_setting_get --key=search_url)
@@ -149,6 +156,7 @@ run__rotate_master_key() {
     # and for the bind = "null" secrets that is the YNH_NULL marker: read
     # them from the settings.
     outbound=$(ynh_app_setting_get --key=outbound)
+    lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
     set +o xtrace
     ui_password=$(ynh_app_setting_get --key=ui_password)
     search_token=$(ynh_app_setting_get --key=search_token)

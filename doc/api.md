@@ -9,8 +9,13 @@ The addresses Whoopy answers on, who may reach each, and the model names.
 | `/` | the group chosen at install | the YunoHost portal |
 | `/ui/` | the same group | the portal, then LiteLLM's admin login |
 | `/docs` | the same group | the portal (LiteLLM's Swagger) |
-| `/v1`, `/chat/completions`, `/completions`, `/embeddings`, `/models`, `/mcp` | anyone on the internet | a LiteLLM token |
-| `/v1/mcp`, `/mcp-rest`, `/v1/tool`, `/v1/traces`, `/v1/decisions` | YunoHost admins | the portal, then a token |
+| `/v1`, `/chat/completions`, `/completions`, `/embeddings`, `/models` | anyone on the internet | a LiteLLM token |
+| `/mcp` | the [LAN ranges](config.md#lan-ranges) only | a LiteLLM token |
+| `/v1/mcp`, `/mcp-rest` | YunoHost admins, from the LAN ranges only | the portal, then a token |
+| `/v1/tool`, `/v1/traces`, `/v1/decisions` | YunoHost admins | the portal, then a token |
+
+Every MCP route, LiteLLM's admin page for MCP (`/ui/mcp/`) included, answers
+403 outside the LAN ranges.
 
 Tokens are made in LiteLLM's admin page (`/ui/`, Virtual Keys). The admin
 login is user `admin` with the password set at install or in the

@@ -19,6 +19,8 @@ the machine by Wake-on-LAN when a request arrives.
   time, see its state, list its models.
 - **Web search for the models** at `/mcp/web`, with the cheruby-search-mcp app.
 - **Your documents for the models** at `/mcp/docs`, with the cheruby-docs-mcp app.
+- **MCP for the local network only**: the tool routes answer 403 from the
+  internet, while the LLM API stays open to any token.
 - **Confined by default**: no internet, root-owned code, a pinned and
   hash-checked LiteLLM.
 
@@ -55,7 +57,7 @@ curl https://<domain>/v1/chat/completions \
 
 ## Latest release
 
-**0.2.0~ynh3** (2026-11-21). See the [changelog](CHANGELOG.md) for what changed.
+**0.2.0~ynh4** (2026-11-22). See the [changelog](CHANGELOG.md) for what changed.
 
 ## License
 

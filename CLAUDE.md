@@ -43,6 +43,8 @@ upgrading this app touches a running service and a database, so ask first.
   and holds only what LiteLLM copies there (migrations, admin page files).
 - **Three permissions**: `main` (`/`, portal), `api` (the API paths,
   visitors), `admin_api` (admins, the management routes under them).
+- **The MCP routes are LAN-only** in `conf/nginx.conf`: one regex location
+  with an `allow` per entry of the `lan_ranges` setting, then `deny all`.
 - **The binary is downloaded, never compiled on install**, from a release of
   this repository.
 

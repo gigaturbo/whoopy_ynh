@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.0~ynh4 (2026-11-22)
 
+- [x] **FEAT** the MCP routes answer the local networks only, set in the panel's LAN ranges; 403 from the internet
 - [x] **DOC** the user manual moves from the README into `doc/`
 
 ## 0.2.0~ynh3 (2026-11-21)

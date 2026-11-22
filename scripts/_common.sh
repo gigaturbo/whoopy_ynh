@@ -13,6 +13,9 @@ whoopy_default_settings() {
     ynh_app_setting_set_default --key=outbound --value="lan"
     # The shared admin/password login. On at install: no other admin exists yet.
     ynh_app_setting_set_default --key=env_login --value=1
+    # Who may reach the MCP routes: private networks only by default. The
+    # server's own public IPv6 prefix is added in the panel.
+    ynh_app_setting_set_default --key=lan_ranges --value="127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7"
     # The MCP side apps: an address and a token pasted in the config panel.
     # The addresses default to their usual loopback ports.
     ynh_app_setting_set_default --key=search_enabled --value=0
@@ -190,10 +193,24 @@ whoopy_configure() {
     if [ "$outbound" = "lan" ]; then ip_deny="any"; else ip_deny=""; fi
     ynh_config_add_systemd
     ynh_config_add_systemd --service="$app-wake" --template="wake.service"
+    lan_allow=$(whoopy_lan_allow "$lan_ranges") \
+        || ynh_die "The LAN ranges hold something that is not an address or a network: $lan_ranges"
     ynh_config_add_nginx
 
     yunohost service add "$app" --description="Whoopy, the AI gateway (LiteLLM)"
     yunohost service add "$app-wake" --description="Whoopy, wakes the Ollama machine"
+}
+
+# The nginx `allow` lines for the MCP routes, from a space-separated list of
+# addresses and networks. Fails on anything else: the result lands in nginx's
+# config, so a stray `;` or `}` must never get through.
+whoopy_lan_allow() {
+    python3 -I -c '
+import ipaddress, sys
+nets = [ipaddress.ip_network(r, strict=False) for r in sys.argv[1].split()]
+if not nets:
+    sys.exit(1)
+print(" ".join(f"allow {n};" for n in nets))' "$1" 2>/dev/null
 }
 
 # The tile gets the package's logo only while it has none, so a logo chosen

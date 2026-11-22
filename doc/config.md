@@ -73,8 +73,29 @@ sudo yunohost app setting cheruby-docs-mcp token_<user>
 | Key | Default | Effect |
 |---|---|---|
 | `main.access.outbound` | `lan` | `lan`: LiteLLM reaches local networks only. `any`: anywhere, needed for cloud providers. |
+| `main.access.lan_ranges` | the private networks | who may reach the [MCP routes](mcp.md); anyone else gets a 403 |
 | `main.access.ui_password` | kept | a new admin password for LiteLLM's page; empty keeps it |
 | `main.access.env_login` | on | allow the shared `admin` login. Turning it off is refused until an admin account of your own exists in LiteLLM's page. |
+
+### LAN ranges
+
+Addresses or networks separated by spaces. The default holds the private
+networks only: `127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+fc00::/7`. Anything else is refused, since the list is written into nginx.
+
+- **Add your public IPv6 prefix.** Home devices on IPv6 use public addresses,
+  which the default does not cover. The prefix your router delegates can
+  change: update it here when it does.
+- **The VPN** is covered by the default if its addresses are private.
+- **Through the router's public IPv4,** a home device arrives from the
+  router's own LAN address, so it counts as local. If the router ever hid
+  the real source of traffic from the internet in the same way, the internet
+  would count as local too. The Whoopy token is still required, which is why
+  both checks stay.
+
+```bash
+sudo yunohost app config set whoopy main.access.lan_ranges -v "127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7 <your-prefix>/60"
+```
 
 ## Master key
 

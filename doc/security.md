@@ -9,6 +9,8 @@ token.
   files, read by systemd before it drops privileges.
 - **The service is confined**: no `/home` beyond its own data, no `/mnt`,
   `/media` or `/srv`. Memory capped at 1.5 GB.
+- **The MCP tools are not on the internet**: their routes answer the local
+  networks only, so a leaked token alone does not reach the tools.
 - **No internet by default**: LiteLLM reaches local networks only until the
   panel's outbound setting says otherwise.
 - **Nothing is fetched at runtime**: price list, blog feed and similar
