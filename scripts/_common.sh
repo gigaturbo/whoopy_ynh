@@ -206,8 +206,13 @@ whoopy_configure() {
 # config, so a stray `;` or `}` must never get through.
 whoopy_lan_allow() {
     python3 -I -c '
-import ipaddress, sys
-nets = [ipaddress.ip_network(r, strict=False) for r in sys.argv[1].split()]
+import ipaddress, re, sys
+raw = sys.argv[1].split()
+# Address characters only: a zone such as "fe80::1%x;}" parses, and would
+# reach nginx with its ";" and "}".
+if any(not re.fullmatch(r"[0-9A-Fa-f:./]+", r) for r in raw):
+    sys.exit(1)
+nets = [ipaddress.ip_network(r, strict=False) for r in raw]
 if not nets:
     sys.exit(1)
 print(" ".join(f"allow {n};" for n in nets))' "$1" 2>/dev/null
