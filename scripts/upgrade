@@ -5,28 +5,12 @@ source /usr/share/yunohost/helpers
 
 whoopy_default_settings
 
-# Until ~ynh9, the side apps' tokens were read from their settings at each
-# configure; they are pasted in the panel now. Taken from them once here, so
-# what was on stays on: search's token, and the docs token of the first admin,
-# the one user /mcp/docs_<user> served. Untraced: YunoHost redacts a traced
-# token in the operation log only, not in yunohost-cli.log.
-admin=$(yunohost user group info admins --output-as json \
-    | python3 -c 'import json, sys; print(json.load(sys.stdin)["members"][0])')
+# The web search and documents settings, dropped in 0.2.0~ynh5: such
+# servers are added in LiteLLM's admin page now. Untraced: two are tokens.
 set +o xtrace
-if [ "${search_enabled:-0}" = "1" ] && [ -z "${search_token:-}" ]; then
-    search_token=$(ynh_app_setting_get --app=cheruby-search-mcp --key=token)
-    ynh_app_setting_set --key=search_token --value="$search_token"
-fi
-if [ "${docs_enabled:-0}" = "1" ] && [ -z "${docs_token:-}" ]; then
-    docs_token=$(ynh_app_setting_get --app=cheruby-docs-mcp --key="token_$admin")
-    if [ -n "$docs_token" ]; then
-        ynh_app_setting_set --key=docs_token --value="$docs_token"
-    else
-        ynh_app_setting_set --key=docs_enabled --value=0
-        docs_enabled=0
-        ynh_print_warn "Documents turned off: paste a token cheruby-docs-mcp gives to turn them back on."
-    fi
-fi
+for key in search_enabled search_url search_token docs_enabled docs_url docs_embed_url docs_token; do
+    ynh_app_setting_delete --key="$key"
+done
 set -o xtrace
 
 # Rebuilt only when the lock file or uv changed: the pin moves only with a

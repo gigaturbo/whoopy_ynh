@@ -16,20 +16,10 @@ whoopy_default_settings() {
     # Who may reach the MCP routes: private networks only by default. The
     # server's own public IPv6 prefix is added in the panel.
     ynh_app_setting_set_default --key=lan_ranges --value="127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7"
-    # The MCP side apps: an address and a token pasted in the config panel.
-    # The addresses default to their usual loopback ports.
-    ynh_app_setting_set_default --key=search_enabled --value=0
-    ynh_app_setting_set_default --key=search_url --value="http://127.0.0.1:8772/mcp"
-    ynh_app_setting_set_default --key=docs_enabled --value=0
-    ynh_app_setting_set_default --key=docs_url --value="http://127.0.0.1:8770/mcp"
-    ynh_app_setting_set_default --key=docs_embed_url --value="http://127.0.0.1:8771/v1"
     # The tokens and secrets below are untraced: the trace prints each value,
     # in the -z checks and in set_default's own check, and YunoHost redacts
     # the operation log, not yunohost-cli.log.
     set +o xtrace
-    # app.env needs both defined, even empty.
-    ynh_app_setting_set_default --key=search_token --value=""
-    ynh_app_setting_set_default --key=docs_token --value=""
 
     # Generated once. The salt key must never change: it encrypts the
     # provider credentials stored in the database.
@@ -139,16 +129,6 @@ whoopy_configure() {
     [ -n "${ui_password:-}" ] || ynh_die "No admin password for LiteLLM's page."
     ui_password_env=${ui_password//\\/\\\\}
     ui_password_env=${ui_password_env//\"/\\\"}
-    set -o xtrace
-
-    # A side app turned on without its token would fail at each tool call.
-    set +o xtrace
-    if [ "${search_enabled:-0}" = "1" ] && [ -z "${search_token:-}" ]; then
-        ynh_die "Web search is on but has no token: paste the one cheruby-search-mcp gives."
-    fi
-    if [ "${docs_enabled:-0}" = "1" ] && [ -z "${docs_token:-}" ]; then
-        ynh_die "Documents are on but have no token: paste the one cheruby-docs-mcp gives."
-    fi
     set -o xtrace
 
     # Not named .env: LiteLLM loads any .env above its code at import, and

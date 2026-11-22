@@ -71,63 +71,6 @@ name = "Whoopy"
         type = "button"
         help = "Sends the wake packet and waits for Ollama to answer, using the saved MAC, broadcast and timeout."
 
-    [main.search]
-    name = "Web search"
-    help = "Tools that search the web and read a public page, served by the cheruby-search-mcp app. Clients reach them at /mcp/web with any Whoopy token."
-
-        [main.search.search_enabled]
-        ask = "Offer web search through /mcp/web"
-        type = "boolean"
-        bind = "settings"
-
-        [main.search.search_url]
-        ask = "Address of its MCP server"
-        type = "string"
-        help = "The default is that app's own, on this server."
-        pattern.regexp = '^https?://[^/"\s]+(/[^"\s]*)?$'
-        pattern.error = "A URL, e.g. http://127.0.0.1:8770/mcp"
-        bind = "settings"
-
-        [main.search.search_token]
-        ask = "New token"
-        type = "password"
-        optional = true
-        help = "The one cheruby-search-mcp gives: sudo cheruby-search-mcp token. Leave empty to keep the current one."
-        bind = "null"
-
-    [main.docs]
-    name = "Documents"
-    help = "Folders served by the cheruby-docs-mcp app, the ones it opens to the token below, read-only but for those it marks writable. Clients reach them at /mcp/docs, with a Whoopy key granted the docs server in LiteLLM's admin page. Its embedding model, EmbeddingGemma, is offered too, as embeddinggemma, to any key."
-
-        [main.docs.docs_enabled]
-        ask = "Offer documents through /mcp/docs"
-        type = "boolean"
-        bind = "settings"
-
-        [main.docs.docs_url]
-        ask = "Address of its MCP server"
-        type = "string"
-        help = "The default is that app's own, on this server."
-        pattern.regexp = '^https?://[^/"\s]+(/[^"\s]*)?$'
-        pattern.error = "A URL, e.g. http://127.0.0.1:8770/mcp"
-        bind = "settings"
-
-        [main.docs.docs_embed_url]
-        ask = "Address of its embedding model"
-        type = "string"
-        optional = true
-        help = "The default is that app's own, on this server. Empty: no embeddinggemma."
-        pattern.regexp = '^$|^https?://[^/"\s]+(/[^"\s]*)?$'
-        pattern.error = "A URL, e.g. http://127.0.0.1:8771/v1"
-        bind = "settings"
-
-        [main.docs.docs_token]
-        ask = "New token"
-        type = "password"
-        optional = true
-        help = "The one cheruby-docs-mcp gives for the folders it opens to Whoopy: sudo cheruby-docs-mcp token. Leave empty to keep the current one."
-        bind = "null"
-
     [main.access]
     name = "Access"
 

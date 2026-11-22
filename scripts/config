@@ -24,26 +24,6 @@ validate__wol_mac() {
     fi
 }
 
-# Validators run for changed fields only: turning a side app on checks its
-# token, typed now or kept from before.
-validate__search_enabled() {
-    [ "${search_enabled:-0}" = "1" ] || return 0
-    set +o xtrace
-    if [ -z "${search_token:-}" ] && [ -z "$(ynh_app_setting_get --key=search_token)" ]; then
-        echo "Paste the token cheruby-search-mcp gives."
-    fi
-    set -o xtrace
-}
-
-validate__docs_enabled() {
-    [ "${docs_enabled:-0}" = "1" ] || return 0
-    set +o xtrace
-    if [ -z "${docs_token:-}" ] && [ -z "$(ynh_app_setting_get --key=docs_token)" ]; then
-        echo "Paste the token cheruby-docs-mcp gives."
-    fi
-    set -o xtrace
-}
-
 # The list lands in nginx's config: one address or network per entry.
 validate__lan_ranges() {
     whoopy_lan_allow "${lan_ranges:-}" >/dev/null \
@@ -88,22 +68,6 @@ set__ui_password() {
     set -o xtrace
 }
 
-set__search_token() {
-    set +o xtrace
-    if [ -n "${search_token:-}" ]; then
-        ynh_app_setting_set --key=search_token --value="$search_token"
-    fi
-    set -o xtrace
-}
-
-set__docs_token() {
-    set +o xtrace
-    if [ -n "${docs_token:-}" ]; then
-        ynh_app_setting_set --key=docs_token --value="$docs_token"
-    fi
-    set -o xtrace
-}
-
 #=================================================
 # APPLY
 #=================================================
@@ -121,15 +85,8 @@ ynh_app_config_apply() {
     outbound=$(ynh_app_setting_get --key=outbound)
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
     env_login=$(ynh_app_setting_get --key=env_login)
-    search_enabled=$(ynh_app_setting_get --key=search_enabled)
-    search_url=$(ynh_app_setting_get --key=search_url)
-    docs_enabled=$(ynh_app_setting_get --key=docs_enabled)
-    docs_url=$(ynh_app_setting_get --key=docs_url)
-    docs_embed_url=$(ynh_app_setting_get --key=docs_embed_url)
     set +o xtrace
     ui_password=$(ynh_app_setting_get --key=ui_password)
-    search_token=$(ynh_app_setting_get --key=search_token)
-    docs_token=$(ynh_app_setting_get --key=docs_token)
     set -o xtrace
 
     whoopy_configure
@@ -159,8 +116,6 @@ run__new_master_key() {
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
     set +o xtrace
     ui_password=$(ynh_app_setting_get --key=ui_password)
-    search_token=$(ynh_app_setting_get --key=search_token)
-    docs_token=$(ynh_app_setting_get --key=docs_token)
     master_key="sk-$(ynh_string_random --length=48)"
     ynh_app_setting_set --key=master_key --value="$master_key"
     set -o xtrace
