@@ -18,6 +18,11 @@ RuntimeDirectory=__APP__
 RuntimeDirectoryMode=0750
 Environment=WHOOPY_SOCKET=/run/__APP__/wake.sock
 
+# The wake settings the status page changes (settings.json), the only place
+# the daemon may write.
+StateDirectory=__APP__
+StateDirectoryMode=0700
+
 ExecStart=__INSTALL_DIR__/bin/whoopy serve
 
 MemoryMax=64M

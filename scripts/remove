@@ -12,6 +12,8 @@ done
 ynh_config_remove_systemd
 ynh_config_remove_systemd "$app-wake"
 ynh_config_remove_nginx
+# The wake settings, which systemd keeps after the unit goes.
+ynh_safe_rm "/var/lib/$app"
 
 # The install dir, data dir, database, user and Node version go with the
 # manifest's resources.

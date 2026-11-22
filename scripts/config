@@ -7,23 +7,6 @@ source /usr/share/yunohost/helpers
 # VALIDATION
 #=================================================
 
-# Validators run for changed fields only: ticking the box alone must check too.
-validate__wol_enabled() {
-    validate__wol_mac
-}
-
-# The panel's pattern takes 300.1.1.1; the wake daemon would refuse to start.
-validate__wol_broadcast() {
-    python3 -I -c 'import ipaddress, sys; ipaddress.IPv4Address(sys.argv[1])' "${wol_broadcast:-}" 2>/dev/null \
-        || echo "Not an IPv4 address, e.g. 255.255.255.255 or 192.168.1.255."
-}
-
-validate__wol_mac() {
-    if [ "${wol_enabled:-0}" = "1" ] && [ -z "${wol_mac:-}" ]; then
-        echo "A MAC address is needed to wake the Ollama machine."
-    fi
-}
-
 # The list lands in nginx's config: one address or network per entry.
 validate__lan_ranges() {
     whoopy_lan_allow "${lan_ranges:-}" >/dev/null \
@@ -40,19 +23,6 @@ validate__env_login() {
     if [ "${admins:-0}" = "0" ]; then
         echo "Create your own admin account with a password in LiteLLM's admin page first (Users, role Admin), then turn this off."
     fi
-}
-
-#=================================================
-# GETTERS
-#=================================================
-
-# The status line above the Wake button, from the wake daemon.
-get__wake_status() {
-    local out
-    out=$(timeout 5 "$install_dir/bin/whoopy" --socket "/run/$app/wake.sock" status 2>&1) \
-        || out="The wake daemon does not answer: systemctl status $app-wake"
-    echo "ask: |"
-    sed 's/^/    - /' <<< "$out"
 }
 
 #=================================================
@@ -77,11 +47,6 @@ ynh_app_config_apply() {
 
     # The templates read these, and they may have just changed.
     ollama_url=$(ynh_app_setting_get --key=ollama_url)
-    keep_alive=$(ynh_app_setting_get --key=keep_alive)
-    wol_enabled=$(ynh_app_setting_get --key=wol_enabled)
-    wol_mac=$(ynh_app_setting_get --key=wol_mac)
-    wol_broadcast=$(ynh_app_setting_get --key=wol_broadcast)
-    wake_timeout_s=$(ynh_app_setting_get --key=wake_timeout_s)
     outbound=$(ynh_app_setting_get --key=outbound)
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
     env_login=$(ynh_app_setting_get --key=env_login)
@@ -96,17 +61,6 @@ ynh_app_config_apply() {
 #=================================================
 # ACTIONS
 #=================================================
-
-run__wake_now() {
-    # The daemon wakes with the saved settings, and shares the wake with any
-    # request already waiting for it.
-    local out
-    if out=$("$install_dir/bin/whoopy" --socket "/run/$app/wake.sock" wake 2>&1); then
-        ynh_print_info "$out"
-    else
-        ynh_die "$out"
-    fi
-}
 
 run__new_master_key() {
     # In an action, a field not in the button's section holds its old value,

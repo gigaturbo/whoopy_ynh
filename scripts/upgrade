@@ -13,6 +13,24 @@ for key in search_enabled search_url search_token docs_enabled docs_url docs_emb
 done
 set -o xtrace
 
+# The wake settings moved from the panel to the status page in 0.3.0~ynh1:
+# carried into the daemon's file while the panel still holds them (a failed
+# upgrade restores them, and they win over a file it left), then dropped.
+# Each value passed the panel's pattern, so it is safe inside JSON quotes.
+if [ -n "${wake_timeout_s:-}" ]; then
+    mkdir -p "/var/lib/$app"
+    if [ "${wol_enabled:-0}" = "1" ]; then wol_json=true; else wol_json=false; fi
+    printf '{"wol_enabled": %s, "wol_mac": "%s", "wol_broadcast": "%s", "wake_timeout_s": %s, "keep_alive": "%s"}\n' \
+        "$wol_json" "${wol_mac:-}" "${wol_broadcast:-255.255.255.255}" "$wake_timeout_s" "${keep_alive:-}" \
+        > "/var/lib/$app/settings.json"
+    chown -R "$app:$app" "/var/lib/$app"
+    chmod 700 "/var/lib/$app"
+    chmod 600 "/var/lib/$app/settings.json"
+fi
+for key in keep_alive wol_enabled wol_mac wol_broadcast wake_timeout_s; do
+    ynh_app_setting_delete --key="$key"
+done
+
 # Rebuilt only when the lock file or uv changed: the pin moves only with a
 # new package version (see RISKS R35 on the server).
 rebuild=1

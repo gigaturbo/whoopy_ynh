@@ -11,6 +11,8 @@ source /usr/share/yunohost/helpers
 ynh_backup "/etc/nginx/conf.d/$domain.d/$app.conf"
 ynh_backup "/etc/systemd/system/$app.service"
 ynh_backup "/etc/systemd/system/$app-wake.service"
+# The wake settings set on the status page.
+ynh_backup "/var/lib/$app"
 
 ynh_psql_dump_db > db.sql
 

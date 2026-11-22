@@ -4,14 +4,12 @@
 # any other MCP server on this machine is added there, never in this file.
 
 model_list:
-  # Every model Ollama has, as ollama/<name>.
+  # Every model Ollama has, as ollama/<name>. The wake hook sets the status
+  # page's keep_alive on these two routes.
   - model_name: "ollama/*"
     litellm_params:
       model: "ollama_chat/*"
       api_base: "{{ ollama_url }}"
-{%- if keep_alive %}
-      keep_alive: "{{ keep_alive }}"
-{%- endif %}
   # The same machine's embedding models, as ollama-embed/<name>: the wildcard
   # above goes through Ollama's chat API, which LiteLLM cannot embed with.
   # Same address, so the wake hook wakes the machine for these too.
@@ -19,9 +17,6 @@ model_list:
     litellm_params:
       model: "ollama/*"
       api_base: "{{ ollama_url }}"
-{%- if keep_alive %}
-      keep_alive: "{{ keep_alive }}"
-{%- endif %}
     model_info:
       mode: "embedding"
 
@@ -36,8 +31,9 @@ mcp_servers:
     auth_type: "bearer_token"
     authentication_token: os.environ/WHOOPY_MCP_TOKEN
     allow_all_keys: true
-    # LiteLLM gives an MCP call 60 s by default; a wake may take longer.
-    timeout: {{ (wake_timeout_s | int) + 10 }}
+    # LiteLLM gives an MCP call 60 s by default; a wake may take up to the
+    # page's longest timeout, 540 s.
+    timeout: 550
 
 litellm_settings:
   # whoopy_wake.py, beside this file.

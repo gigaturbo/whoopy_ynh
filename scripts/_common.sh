@@ -5,11 +5,6 @@
 # Settings with no install question. Defaults only: an upgrade keeps whatever
 # the config panel has since set.
 whoopy_default_settings() {
-    ynh_app_setting_set_default --key=keep_alive --value=""
-    ynh_app_setting_set_default --key=wol_enabled --value=0
-    ynh_app_setting_set_default --key=wol_mac --value=""
-    ynh_app_setting_set_default --key=wol_broadcast --value="255.255.255.255"
-    ynh_app_setting_set_default --key=wake_timeout_s --value=90
     ynh_app_setting_set_default --key=outbound --value="lan"
     # The shared admin/password login. On at install: no other admin exists yet.
     ynh_app_setting_set_default --key=env_login --value=1

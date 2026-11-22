@@ -5,6 +5,7 @@ name = "Whoopy"
 
     [main.ollama]
     name = "Ollama"
+    help = "The wake settings and how long a model stays loaded are on Whoopy's status page, at /."
 
         [main.ollama.ollama_url]
         ask = "Ollama URL"
@@ -13,63 +14,6 @@ name = "Whoopy"
         pattern.regexp = '^https?://[^/]+$'
         pattern.error = "scheme, host and port only, e.g. http://192.168.1.10:11434"
         bind = "settings"
-
-        [main.ollama.keep_alive]
-        ask = "How long a model stays loaded"
-        type = "string"
-        optional = true
-        help = "After a request through Whoopy, e.g. 5m or 30s. Shorter lets the Ollama machine sleep sooner. Empty: Ollama's own setting."
-        pattern.regexp = '^$|^[0-9]+[smh]$'
-        pattern.error = "A number followed by s, m or h, e.g. 5m"
-        bind = "settings"
-
-    [main.wol]
-    name = "Wake-on-LAN"
-    help = "Wakes the Ollama machine when a request arrives and it does not answer. The request waits until Ollama answers, or fails after the timeout."
-
-        [main.wol.wol_enabled]
-        ask = "Wake the Ollama machine on demand"
-        type = "boolean"
-        bind = "settings"
-
-        [main.wol.wol_mac]
-        ask = "MAC address of its network card"
-        type = "string"
-        optional = true
-        example = "aa:bb:cc:dd:ee:ff"
-        help = "The card with Wake-on-LAN enabled. On that machine: ip link"
-        pattern.regexp = '^$|^([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$'
-        pattern.error = "Six pairs of hex digits, e.g. aa:bb:cc:dd:ee:ff"
-        bind = "settings"
-
-        [main.wol.wol_broadcast]
-        ask = "Broadcast address for the wake packet"
-        type = "string"
-        help = "255.255.255.255 reaches the local network this server is on. Use the subnet's own broadcast (e.g. 192.168.1.255) if the server has several networks."
-        pattern.regexp = '^([0-9]{1,3}\.){3}[0-9]{1,3}$'
-        pattern.error = "An IPv4 address"
-        bind = "settings"
-
-        [main.wol.wake_timeout_s]
-        ask = "Seconds to wait for Ollama after a wake"
-        type = "number"
-        min = 10
-        max = 540
-        help = "Past this, the request fails with a 503. nginx waits at most 1200 s for the whole request."
-        bind = "settings"
-
-    # A button sits alone in its section: Save skips any section holding one.
-    [main.wake]
-    name = "Wake now"
-
-        [main.wake.wake_status]
-        type = "markdown"
-        ask = "The wake daemon's state."
-
-        [main.wake.wake_now]
-        ask = "Wake it now"
-        type = "button"
-        help = "Sends the wake packet and waits for Ollama to answer, using the saved MAC, broadcast and timeout."
 
     [main.access]
     name = "Access"
