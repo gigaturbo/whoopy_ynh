@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0~ynh4 (2026-11-23)
+
+- [x] **FEAT** the status page has a tab each for MCP servers and the wake settings (Config); LiteLLM's are named LiteLLM Admin and LiteLLM API
+
 ## 0.3.0~ynh3 (2026-11-23)
 
 - [x] **FIX** a restore or reinstall after removing the app no longer fails on the data folder the remove left behind
