@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0~ynh2 (2026-11-23)
+
+- [x] **FIX** the status page's MCP section works after signing in to the admin page, instead of saying the session expired
+
 ## 0.3.0~ynh1 (2026-11-22)
 
 - [x] **FEAT** the wake settings and how long a model stays loaded move from the config panel to the status page, and apply without a restart
