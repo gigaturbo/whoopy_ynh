@@ -14,6 +14,19 @@ runtime.
 
 ## Bugs
 
+### B-P-5 · a restore after a remove fails on the old data folder
+
+`todo` `small` `filed 2026-11-23`
+
+`app remove` keeps `/home/yunohost.app/whoopy`, its files owned by the old
+user id. The restore re-creates `whoopy` under a new id (982 then 989 on
+2026-11-23) and owns only the folder itself, so LiteLLM cannot overwrite its
+copied migrations, crash-loops, and the restore rolls back, leaving Whoopy
+uninstalled. The same holds for a reinstall.
+**Fix:** `whoopy_configure` hands the folder's contents to the app user; in
+the repository, not yet released. Closes with a T-P-3 run on the release,
+the old folder left in place.
+
 ## Features
 
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
@@ -77,33 +90,20 @@ Two ways, to be chosen:
 
 ### T-P-3 · backup, remove, restore
 
-`todo` `playtest` `reopened 2026-11-22` `needs: F-M-12`
+`todo` `playtest` `reopened 2026-11-22` `needs: B-P-5`
 
-**Do:** after asking, back up, remove and restore Whoopy.
+**Do:** after asking, back up, remove and restore Whoopy, the data folder
+left in place by the remove.
 **Pass:** both services up; the settings, master key and MCP token identical
-(fingerprints, never printed); `/v1/models` and `/mcp/whoopy` answer; and,
-new since 0.2.0~ynh5, the database servers `web` and `docs` (same ids) and
-the model `embeddinggemma` are back and answer, their stored tokens readable.
-**Last:** 2026-11-20 at `d9779d4`, pass: 91 s down, the 18 keys, master key
-and MCP token identical, `/v1/models` and `/mcp/whoopy` answer; no stored
-credential or model in the database then.
-
-### T-M-10 · the MCP routes refuse the internet and answer the LAN
-
-`todo` `playtest` `filed 2026-11-22` `needs: F-M-9`
-
-**Do:** after asking to upgrade, set `lan_ranges` to the defaults plus the
-server's IPv6 prefix, then call `/mcp/web` through the domain with a key from
-the LAN, through the VPN, and from outside (a phone on mobile data, or a
-host off the network); also `/v1/models` from outside.
-**Pass:** LAN and VPN answer as before; outside gets a 403 on `/mcp/web`,
-`/v1/mcp/server` and `/ui/mcp/`; `/v1/models` from outside still 200 with
-the key.
-**Last:** 2026-11-22 at `65cd1dd`, 0.2.0~ynh4 installed: from the server
-through the domain with a key, `/mcp/web`, `/mcp/docs`, `/mcp/whoopy` list
-their tools; from an off-site host without a key, `/mcp/web`, `/mcp/`,
-`/v1/mcp/server`, `/mcp-rest/tools/list`, `/web/mcp` 403 and `/v1/models`
-401. Still to run: through the VPN, and `/v1/models` from outside with a key.
+(fingerprints, never printed); `/v1/models` and `/mcp/whoopy` answer; the
+database servers `web` and `docs` (same ids) and the model `embeddinggemma`
+are back and answer, their stored tokens readable.
+**Last:** 2026-11-23 at `6a47334`, 0.3.0~ynh2: the first restore failed and
+rolled back (B-P-5). With the old data folder moved aside to
+`whoopy.tp3-aside-20261123`, the second passed in 80 s: the 22 settings, both
+env files and the wake settings identical; `web` and `docs` with their ids,
+`/mcp/web` 2 tools, `/mcp/docs` 7, `/mcp/whoopy` 3, `embeddinggemma` 768
+dimensions; `/v1/models` 200.
 
 ### T-M-1 · the compact format packs to Tandoor's JSON
 
@@ -147,6 +147,7 @@ the result is to the house rules.
 - `T-P-5` done `playtest` 2026-11-23 at `09e09fd` · through the portal as an admin (run by the author): state, Wake, Admin and API docs tabs, the wake settings loaded, a bad value refused and a good one kept across a reload; on loopback, `settings.json` back to identical and no service restart
 - `B-M-1` closed 2026-11-23 · the status page's MCP section sends the `key` claim of LiteLLM's sign-in cookie, a JWT LiteLLM refuses as a Bearer (0.3.0~ynh2, upgraded 2026-11-23): with a real `/ui/` sign-in it lists, adds and removes servers, where 0.3.0~ynh1 said "session has expired"
 - `F-P-9` done 2026-11-22 · the wake settings and `keep_alive` moved from the panel to the status page, kept by the daemon in `/var/lib/whoopy/settings.json` and applied live (0.3.0~ynh1, released as `whoopy-0.3.0`, upgraded 2026-11-22): the upgrade carried the panel's values (on, MAC, 120 s) and dropped them; the panel holds five fields and the master key button; `tests/wake-playtest.sh` passed T-P-4 (page wake in 10 s), T-W-1 (chat 200 in 27 s, one resume, `keep_alive` 3m from the page: the model expired 180 s later) and T-W-2 (503 in 21 s, then 0 s) with settings changed through the page and no restart; `/mcp/whoopy`, `web`, `docs` list 3, 2, 7 tools after it
+- `T-M-10` done `playtest` 2026-11-23 at `6a47334` · 0.3.0~ynh2, `lan_ranges` the defaults plus the IPv6 prefix: from the server through the domain over its LAN IPv4, LAN IPv6 and its VPN addresses (10.10.10.0, fd42::, as nginx logged them; no real VPN client), `/mcp/web` and `/mcp/whoopy` list their tools and `/v1/models` 200; from the off-site backup server with the master key, `/mcp/web`, `/v1/mcp/server`, `/ui/mcp/` 403 and `/v1/models` 200
 - `F-M-12` done 2026-11-22 · the package names no side app: web search, documents and `embeddinggemma` left the panel, the settings and `config.yaml` (0.2.0~ynh5, upgraded 2026-11-22); re-created in LiteLLM's database, `docs` with its old id: `/mcp/web` 401 without a token and searched with an ordinary key, `/mcp/docs` refused an ordinary key and listed its seven tools to a granted one, `embeddinggemma` 768 dimensions in 0.2 s with the desktop asleep, `/mcp/whoopy` lists its three tools; no token in YunoHost's logs. T-P-3 reopened
 - `F-M-13` done 2026-11-22 · the status page lists, adds and removes MCP servers with the admin page's sign-in cookie (0.2.0~ynh5); checked offline in a browser against the live listing, T-M-11 open for the portal run
 - `F-M-11` done 2026-11-22 · the gateway docs name every tool `<server>-<tool>`, as LiteLLM lists them (separator `-`); `/mcp/docs` lists its seven tools, write ones included, and links each side app's own `doc/mcp.md`
