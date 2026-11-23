@@ -163,6 +163,11 @@ whoopy_configure() {
     chmod o+x "$install_dir" "$install_dir/icons"
     chmod o+r "$install_dir"/icons/*
 
+    # The data dir survives a remove, with its files still owned by the old
+    # user's id; a reinstall or restore gives the user a new one, and LiteLLM
+    # could no longer overwrite what it copies there at each start.
+    chown -R "$app:$app" "$data_dir"
+
     # "lan": loopback and private networks only, so a stolen process cannot
     # reach the internet. "any": cloud providers become reachable.
     if [ "$outbound" = "lan" ]; then ip_deny="any"; else ip_deny=""; fi
