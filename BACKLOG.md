@@ -88,36 +88,6 @@ the model `embeddinggemma` are back and answer, their stored tokens readable.
 and MCP token identical, `/v1/models` and `/mcp/whoopy` answer; no stored
 credential or model in the database then.
 
-### T-P-5 · the status page through the domain
-
-`todo` `playtest` `reopened 2026-11-23`
-
-**Do:** the recipe in `whoopy-kb`, as an admin through the portal.
-**Pass:** as there, the wake settings included.
-**Last:** 2026-11-23 at `09e09fd`, on the daemon's loopback port in a
-browser, not through the portal: settings loaded; a bad broadcast address
-refused with the daemon's reason (serde's raw wording); `keep_alive` 4m
-survived a reload, then restored; `settings.json` identical after and
-neither service restarted; tabs point at `/ui/` and `/docs`. The desktop was
-awake, so no wake was run.
-
-### T-M-11 · the page's MCP section through the portal
-
-`todo` `playtest` `filed 2026-11-22` `needs: F-M-13`
-
-**Do:** after asking to upgrade, open `/` through the portal signed out of
-`/ui/`, then signed in; add a test server, call it with a key, remove it.
-**Pass:** signed out, a sign-in message and no form; signed in, the servers
-listed with `whoopy` marked from the package; the added server answers at
-`/mcp/<name>`; removed, it is gone from the list and the route.
-**Last:** 2026-11-23 at `09e09fd`, 0.3.0~ynh2 installed: signed out through
-the domain sent to the portal; on the daemon's loopback port with a real
-`/ui/` sign-in: sign-in message and no form before it; `docs`, `web`,
-`whoopy` listed, `whoopy` from the package and without Remove; `pwtest`
-added, listed 3 tools through the domain with a key, removed, then 403 there.
-At `f0f8f24` the same run failed (B-M-1). Still to run: through the portal as
-an admin.
-
 ### T-M-10 · the MCP routes refuse the internet and answer the LAN
 
 `todo` `playtest` `filed 2026-11-22` `needs: F-M-9`
@@ -173,6 +143,8 @@ the result is to the house rules.
 
 ## Closed
 
+- `T-M-11` done `playtest` 2026-11-23 at `09e09fd` · through the portal as an admin (run by the author): signed out of `/ui/` a sign-in message and no form, signed in the servers listed, a test server added and removed, then 403 at `/mcp/test`; on loopback with a real sign-in, `pwtest` listed its 3 tools through the domain with a key, then 403 once removed
+- `T-P-5` done `playtest` 2026-11-23 at `09e09fd` · through the portal as an admin (run by the author): state, Wake, Admin and API docs tabs, the wake settings loaded, a bad value refused and a good one kept across a reload; on loopback, `settings.json` back to identical and no service restart
 - `B-M-1` closed 2026-11-23 · the status page's MCP section sends the `key` claim of LiteLLM's sign-in cookie, a JWT LiteLLM refuses as a Bearer (0.3.0~ynh2, upgraded 2026-11-23): with a real `/ui/` sign-in it lists, adds and removes servers, where 0.3.0~ynh1 said "session has expired"
 - `F-P-9` done 2026-11-22 · the wake settings and `keep_alive` moved from the panel to the status page, kept by the daemon in `/var/lib/whoopy/settings.json` and applied live (0.3.0~ynh1, released as `whoopy-0.3.0`, upgraded 2026-11-22): the upgrade carried the panel's values (on, MAC, 120 s) and dropped them; the panel holds five fields and the master key button; `tests/wake-playtest.sh` passed T-P-4 (page wake in 10 s), T-W-1 (chat 200 in 27 s, one resume, `keep_alive` 3m from the page: the model expired 180 s later) and T-W-2 (503 in 21 s, then 0 s) with settings changed through the page and no restart; `/mcp/whoopy`, `web`, `docs` list 3, 2, 7 tools after it
 - `F-M-12` done 2026-11-22 · the package names no side app: web search, documents and `embeddinggemma` left the panel, the settings and `config.yaml` (0.2.0~ynh5, upgraded 2026-11-22); re-created in LiteLLM's database, `docs` with its old id: `/mcp/web` 401 without a token and searched with an ordinary key, `/mcp/docs` refused an ordinary key and listed its seven tools to a granted one, `embeddinggemma` 768 dimensions in 0.2 s with the desktop asleep, `/mcp/whoopy` lists its three tools; no token in YunoHost's logs. T-P-3 reopened
