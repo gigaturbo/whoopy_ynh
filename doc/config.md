@@ -52,6 +52,7 @@ sudo yunohost app config set whoopy main.access.lan_ranges -v "<ranges>"
 |---|---|---|
 | `main.access.outbound` | `lan` | `lan`: LiteLLM reaches local networks only. `any`: anywhere, needed for cloud providers. |
 | `main.access.lan_ranges` | the private networks | who may reach the [MCP routes](mcp.md); anyone else gets a 403 |
+| `main.access.mcp_public` | none | the [MCP servers reachable from the internet](#public-mcp-servers), with a key |
 | `main.access.ui_password` | kept | a new admin password for LiteLLM's page; empty keeps it |
 | `main.access.env_login` | on | allow the shared `admin` login. Turning it off is refused until an admin account of your own exists in LiteLLM's page. |
 
@@ -73,6 +74,30 @@ fc00::/7`. Anything else is refused, since the list is written into nginx.
 
 ```bash
 sudo yunohost app config set whoopy main.access.lan_ranges -v "127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7 <your-prefix>/60"
+```
+
+### Public MCP servers
+
+MCP server names separated by spaces, e.g. `web docs`. Each one answers at
+`https://<domain>/mcp/<name>` from anywhere, to a key granted that server.
+Everything else stays on the LAN ranges: the other servers, the bare `/mcp`
+that picks servers from a header, and the routes that add or change a server.
+Empty, the default, keeps every server local.
+
+- **Use exactly `/mcp/<name>`.** Other forms of the address
+  (`/<name>/mcp`, `/mcp/web,docs`, `/mcp/<name>/...`) still answer 403 from
+  outside.
+- **Make a key per outside client**, granted only the servers it needs.
+  Never use the master key away from home: it reaches every server.
+- **A server's write tools are open too.** A key granted `docs` from outside
+  can write files.
+- **Keep the names apart from MCP access groups.** A listed name that is also
+  an access group's name opens that group's servers too.
+- **`sse`, `proxy` and `enabled` are refused**: they are LiteLLM's own
+  routes, not servers.
+
+```bash
+sudo yunohost app config set whoopy main.access.mcp_public -v "web docs"
 ```
 
 ## Master key

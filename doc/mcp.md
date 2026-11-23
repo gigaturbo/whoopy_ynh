@@ -4,9 +4,11 @@ The tool servers Whoopy publishes. A client adds one as an MCP server over
 Streamable HTTP, at `https://<domain>/mcp/<name>`, with a Whoopy token as
 Bearer. A call without a token gets a 401, never the portal.
 
-**Local networks only.** The MCP routes answer only the networks listed in
-the panel's [LAN ranges](config.md#lan-ranges); from anywhere else they answer
-403. Away from home, connect through the VPN first. The LLM API under `/v1`
+**Local networks only, unless opened.** The MCP routes answer only the
+networks listed in the panel's [LAN ranges](config.md#lan-ranges); from
+anywhere else they answer 403. Away from home, connect through the VPN first,
+or open a server to the internet with the panel's
+[public MCP servers](config.md#public-mcp-servers). The LLM API under `/v1`
 is not affected.
 
 **Tool names.** Each tool is named `<server>-<tool>`: LiteLLM puts the
