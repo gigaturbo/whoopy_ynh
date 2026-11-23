@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0~ynh5 (2026-11-23)
+
+- [x] **FEAT** the panel can open chosen MCP servers to the internet, at `/mcp/<name>` with a key; the others stay on the local networks
+
 ## 0.3.0~ynh4 (2026-11-23)
 
 - [x] **FEAT** the status page has a tab each for MCP servers and the wake settings (Config); LiteLLM's are named LiteLLM Admin and LiteLLM API
