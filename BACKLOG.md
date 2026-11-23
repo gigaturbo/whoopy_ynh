@@ -88,6 +88,19 @@ the model `embeddinggemma` are back and answer, their stored tokens readable.
 and MCP token identical, `/v1/models` and `/mcp/whoopy` answer; no stored
 credential or model in the database then.
 
+### T-P-5 · the status page through the domain
+
+`todo` `playtest` `reopened 2026-11-23`
+
+**Do:** the recipe in `whoopy-kb`, as an admin through the portal.
+**Pass:** as there, the wake settings included.
+**Last:** 2026-11-23 at `09e09fd`, on the daemon's loopback port in a
+browser, not through the portal: settings loaded; a bad broadcast address
+refused with the daemon's reason (serde's raw wording); `keep_alive` 4m
+survived a reload, then restored; `settings.json` identical after and
+neither service restarted; tabs point at `/ui/` and `/docs`. The desktop was
+awake, so no wake was run.
+
 ### T-M-11 · the page's MCP section through the portal
 
 `todo` `playtest` `filed 2026-11-22` `needs: F-M-13`
@@ -97,9 +110,13 @@ credential or model in the database then.
 **Pass:** signed out, a sign-in message and no form; signed in, the servers
 listed with `whoopy` marked from the package; the added server answers at
 `/mcp/<name>`; removed, it is gone from the list and the route.
-**Last:** 2026-11-22, offline only: the page from the working tree, the
-listing from the live LiteLLM, writes recorded not sent; sign-in message,
-list, add (Bearer and body right) and remove pass.
+**Last:** 2026-11-23 at `09e09fd`, 0.3.0~ynh2 installed: signed out through
+the domain sent to the portal; on the daemon's loopback port with a real
+`/ui/` sign-in: sign-in message and no form before it; `docs`, `web`,
+`whoopy` listed, `whoopy` from the package and without Remove; `pwtest`
+added, listed 3 tools through the domain with a key, removed, then 403 there.
+At `f0f8f24` the same run failed (B-M-1). Still to run: through the portal as
+an admin.
 
 ### T-M-10 · the MCP routes refuse the internet and answer the LAN
 
@@ -156,6 +173,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `B-M-1` closed 2026-11-23 · the status page's MCP section sends the `key` claim of LiteLLM's sign-in cookie, a JWT LiteLLM refuses as a Bearer (0.3.0~ynh2, upgraded 2026-11-23): with a real `/ui/` sign-in it lists, adds and removes servers, where 0.3.0~ynh1 said "session has expired"
 - `F-P-9` done 2026-11-22 · the wake settings and `keep_alive` moved from the panel to the status page, kept by the daemon in `/var/lib/whoopy/settings.json` and applied live (0.3.0~ynh1, released as `whoopy-0.3.0`, upgraded 2026-11-22): the upgrade carried the panel's values (on, MAC, 120 s) and dropped them; the panel holds five fields and the master key button; `tests/wake-playtest.sh` passed T-P-4 (page wake in 10 s), T-W-1 (chat 200 in 27 s, one resume, `keep_alive` 3m from the page: the model expired 180 s later) and T-W-2 (503 in 21 s, then 0 s) with settings changed through the page and no restart; `/mcp/whoopy`, `web`, `docs` list 3, 2, 7 tools after it
 - `F-M-12` done 2026-11-22 · the package names no side app: web search, documents and `embeddinggemma` left the panel, the settings and `config.yaml` (0.2.0~ynh5, upgraded 2026-11-22); re-created in LiteLLM's database, `docs` with its old id: `/mcp/web` 401 without a token and searched with an ordinary key, `/mcp/docs` refused an ordinary key and listed its seven tools to a granted one, `embeddinggemma` 768 dimensions in 0.2 s with the desktop asleep, `/mcp/whoopy` lists its three tools; no token in YunoHost's logs. T-P-3 reopened
 - `F-M-13` done 2026-11-22 · the status page lists, adds and removes MCP servers with the admin page's sign-in cookie (0.2.0~ynh5); checked offline in a browser against the live listing, T-M-11 open for the portal run
@@ -164,7 +182,6 @@ the result is to the house rules.
 - `F-M-9` done 2026-11-22 · the MCP routes (`/mcp`, `/mcp-rest`, `/v1/mcp`, `/<server>/mcp`, `/toolset/*/mcp`, `/public/mcp_hub`, `/api/v1/inspect/mcp`, and `/ui/mcp/`) answer only the panel's `lan_ranges`, 403 elsewhere; checked on a throwaway nginx against the live LiteLLM (0.2.0~ynh4, not yet installed: T-M-10)
 - `B-P-4` closed 2026-11-21 · the token defaults and generated secrets run untraced, and so does the rotate button (0.2.0~ynh3, upgraded 2026-11-21): the new MCP token and the new master key have 0 lines in `yunohost-cli.log`; old master key 401, new 200, `/mcp/whoopy` lists its tools. 93 traced lines purged from `yunohost-cli.log`, `.1` and `.2.gz`. Salt key kept (nothing stored encrypted), search token not rotated
 - `F-P-1` done 2026-11-21 · the hook empties LiteLLM's static Ollama list, so a failed `/api/tags` lists nothing instead of `ollama/llama2` (0.2.0~ynh2); checked against the installed LiteLLM with a dead address, not yet on the server. A listing is cached 5 min, so models appear up to 5 min after a wake
-- `T-P-5` done `playtest` 2026-11-21 at `aeb123a` · through the domain: logged out sent to the portal, as an admin the real state and a wake ending "Awake after N s", Admin opens LiteLLM's page, API docs opens Swagger, `/v1/models` 200 with a key (run by the author)
 - `F-P-7` done 2026-11-21 · Whoopy's status page at `/`, served by the wake daemon: state, last wake, a Wake button (needs `X-Whoopy: 1`), tabs to `/ui/` and `/docs`, where `DOCS_URL` moved Swagger (0.2.0~ynh1, released as `whoopy-0.2.0`, upgraded 2026-11-20); T-P-5 passed
 - `T-W-1` done `playtest` 2026-11-20 at `d19ad98` · desktop asleep, a chat request through the domain answered 200 in 16 s; froaky's events showed one resume; it suspended again 123 s later (idle lowered to 2 min, model unloaded). The daemon logs failed wakes only, so the evidence is froaky's events, not `journalctl -u whoopy-wake`
 - `T-W-2` done `playtest` 2026-11-20 at `d19ad98` · made-up MAC and `wake_timeout_s` 20: a 503 after 21 s, "Ollama did not answer within 20 s"; a second request at once, a 503 in 0 s, "a wake failed less than 15 s ago"; MAC and 120 s restored
