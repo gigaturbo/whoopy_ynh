@@ -109,21 +109,6 @@ listed its 3 tools through the domain with a key, removed and no longer
 listed by LiteLLM (its route then answers 200 with no tool, an unknown
 server's JSON-RPC refusal). Still to run: the portal as an admin.
 
-### T-M-10 · who reaches the MCP routes
-
-`todo` `playtest` `reopened 2026-11-23`
-
-**Do:** after asking to upgrade to 0.3.0~ynh5, set `mcp_public` to
-`web docs`; call the MCP routes through the domain from the LAN and from the
-off-site backup server, with and without a key.
-**Pass:** from the LAN, `/mcp/web` and `/mcp/whoopy` list their tools; from
-outside, `/mcp/web` and `/mcp/docs` 401 without a key and list their tools
-with one, while `/mcp`, `/mcp/whoopy`, `/mcp/web,whoopy`, `/mcp/web/x`,
-`/mcp/docs%2F..%2Fweb`, `/v1/mcp/server` and `/ui/mcp/` answer 403;
-`/v1/models` 200 from both.
-**Last:** 2026-11-23 at `6a47334`, 0.3.0~ynh2, `lan_ranges` the defaults plus the IPv6 prefix: from the server through the domain over its LAN IPv4, LAN IPv6 and its VPN addresses (10.10.10.0, fd42::, as nginx logged them; no real VPN client), `/mcp/web` and `/mcp/whoopy` list their tools and `/v1/models` 200; from the off-site backup server with the master key, `/mcp/web`, `/v1/mcp/server`, `/ui/mcp/` 403 and `/v1/models` 200. 0.3.0~ynh5 checked on a
-throwaway nginx only (F-M-14).
-
 ### T-M-1 · the compact format packs to Tandoor's JSON
 
 `todo` `spec` `filed 2026-11-06` `needs: F-M-1`
@@ -162,6 +147,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `T-M-10` done `playtest` 2026-11-23 at `7322f4b` · 0.3.0~ynh5, `mcp_public` `web docs`: from the off-site backup server through the domain, `/mcp/web` and `/mcp/docs` 401 without a key and list their 2 and 7 tools with the master key; `/mcp/whoopy` 403 with it, and so `/mcp`, `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/mcp/proxy`, `/mcp/sse`, `/v1/mcp/server`, `/ui/mcp/`; `/v1/models` 200. From the LAN over IPv4 and IPv6, `/mcp/whoopy` and `/mcp/web` 401 without a key and list 3 and 2 tools with one, `/v1/models` 401 then 200, `/key/list` and `/v1/mcp/server` sent to the portal, the daemon's loopback port 401
 - `F-M-14` done 2026-11-23 · the panel's `mcp_public` opens chosen MCP servers to the internet at `/mcp/<name>` exactly, a key still required, the rest LAN-only; checked on a throwaway nginx against the live LiteLLM with `web docs` from outside the LAN ranges: `/mcp/web`, `/mcp/docs` 401 without a key and list their tools with one, `/mcp`, `/mcp/whoopy` (even with the master key), `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/mcp/sse`, `/web/mcp`, `/v1/mcp/server`, `/ui/mcp/`, `/mcp-rest`, `/public/mcp_hub` 403 (0.3.0~ynh5, not yet installed: T-M-10)
 - `B-M-1` closed 2026-11-23 · the status page's MCP section sends the `key` claim of LiteLLM's sign-in cookie, a JWT LiteLLM refuses as a Bearer (0.3.0~ynh2, upgraded 2026-11-23): with a real `/ui/` sign-in it lists, adds and removes servers, where 0.3.0~ynh1 said "session has expired"
 - `F-P-9` done 2026-11-22 · the wake settings and `keep_alive` moved from the panel to the status page, kept by the daemon in `/var/lib/whoopy/settings.json` and applied live (0.3.0~ynh1, released as `whoopy-0.3.0`, upgraded 2026-11-22): the upgrade carried the panel's values (on, MAC, 120 s) and dropped them; the panel holds five fields and the master key button; `tests/wake-playtest.sh` passed T-P-4 (page wake in 10 s), T-W-1 (chat 200 in 27 s, one resume, `keep_alive` 3m from the page: the model expired 180 s later) and T-W-2 (503 in 21 s, then 0 s) with settings changed through the page and no restart; `/mcp/whoopy`, `web`, `docs` list 3, 2, 7 tools after it
