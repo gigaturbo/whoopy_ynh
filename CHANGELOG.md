@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0~ynh3 (2026-11-23)
+
+- [x] **FIX** a restore or reinstall after removing the app no longer fails on the data folder the remove left behind
+
 ## 0.3.0~ynh2 (2026-11-23)
 
 - [x] **FIX** the status page's MCP section works after signing in to the admin page, instead of saying the session expired
