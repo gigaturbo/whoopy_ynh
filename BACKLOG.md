@@ -23,8 +23,8 @@ user id. The restore re-creates `whoopy` under a new id (982 then 989 on
 2026-11-23) and owns only the folder itself, so LiteLLM cannot overwrite its
 copied migrations, crash-loops, and the restore rolls back, leaving Whoopy
 uninstalled. The same holds for a reinstall.
-**Fix:** `whoopy_configure` hands the folder's contents to the app user; in
-the repository, not yet released. Closes with a T-P-3 run on the release,
+**Fix:** `whoopy_configure` hands the folder's contents to the app user
+(0.3.0~ynh3, upgraded 2026-11-23: every file there the user's). Closes with a T-P-3 run on the release,
 the old folder left in place.
 
 ## Features
