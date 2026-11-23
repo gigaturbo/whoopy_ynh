@@ -32,6 +32,13 @@ name = "Whoopy"
         help = "Addresses or networks separated by spaces. Requests to /mcp and the other MCP routes from anywhere else get a 403. Add this server's public IPv6 prefix so home devices using it are let in; the LLM API stays open to any token."
         bind = "settings"
 
+        [main.access.mcp_public]
+        ask = "MCP servers reachable from the internet"
+        type = "string"
+        optional = true
+        help = "Server names separated by spaces, e.g. web docs. Each is reached at /mcp/<name> from anywhere, with a key granted that server. Every other server, the bare /mcp and the management routes stay on the LAN ranges. Empty keeps them all local."
+        bind = "settings"
+
         [main.access.ui_password]
         ask = "New admin password for LiteLLM's page"
         type = "password"

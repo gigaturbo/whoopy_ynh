@@ -13,6 +13,12 @@ validate__lan_ranges() {
         || echo "Addresses or networks separated by spaces, e.g. 192.168.0.0/16 fd00::/8."
 }
 
+# The names land in nginx's config: server names only.
+validate__mcp_public() {
+    whoopy_mcp_public_re "${mcp_public:-}" >/dev/null \
+        || echo "MCP server names separated by spaces, e.g. web docs."
+}
+
 # Turning the shared login off with no personal admin account would lock
 # everyone out of the admin page.
 validate__env_login() {
@@ -49,6 +55,7 @@ ynh_app_config_apply() {
     ollama_url=$(ynh_app_setting_get --key=ollama_url)
     outbound=$(ynh_app_setting_get --key=outbound)
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
+    mcp_public=$(ynh_app_setting_get --key=mcp_public)
     env_login=$(ynh_app_setting_get --key=env_login)
     set +o xtrace
     ui_password=$(ynh_app_setting_get --key=ui_password)
@@ -68,6 +75,7 @@ run__new_master_key() {
     # them from the settings.
     outbound=$(ynh_app_setting_get --key=outbound)
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
+    mcp_public=$(ynh_app_setting_get --key=mcp_public)
     set +o xtrace
     ui_password=$(ynh_app_setting_get --key=ui_password)
     master_key="sk-$(ynh_string_random --length=48)"
