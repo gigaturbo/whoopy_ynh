@@ -29,7 +29,7 @@ Only `whoopy-wake` wakes the machine.
 ## Adding an MCP server
 
 Any other MCP server, such as an app on this machine that publishes its own
-on loopback, is added on Whoopy's status page (MCP servers), or in LiteLLM's
+on loopback, is added on Whoopy's status page (its MCP Servers tab), or in LiteLLM's
 admin page (`/ui/`, MCP Servers) for the finer settings, never in the
 package. The status page acts with your admin page session: sign in to `/ui/`
 first. Both work from the LAN ranges only.

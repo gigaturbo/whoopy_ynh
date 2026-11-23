@@ -3,7 +3,7 @@
 Settings that change after install live in two places, split by who may
 change them.
 
-- **The status page** (`/`, Wake settings): how the wake behaves and how long
+- **The status page** (`/`, its Config tab): how the wake behaves and how long
   a model stays loaded. Anyone in the group allowed to open the page may
   change them, and a change applies to the next request.
 - **The config panel** (webadmin: Applications, Whoopy, Configuration): what

@@ -27,7 +27,7 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); }
-  nav { display: flex; align-items: center; gap: .25rem; padding: 0 1rem;
+  nav { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding: 0 1rem;
         background: var(--card); border-bottom: 1px solid var(--line); }
   nav .brand { display: flex; align-items: center; gap: .5rem; font-weight: 700;
                margin-right: 1rem; color: var(--ink); text-decoration: none; }
@@ -77,12 +77,14 @@
 <body>
 <nav>
   <a class="brand" href="/"><img src="/favicon.svg" alt="">Whoopy</a>
-  <a class="tab" href="/" aria-current="page">Status</a>
-  <a class="tab" href="/ui/">Admin</a>
-  <a class="tab" href="/docs">API docs</a>
+  <a class="tab" href="#status" data-tab="status">Status</a>
+  <a class="tab" href="#mcp-servers" data-tab="mcp-servers">MCP Servers</a>
+  <a class="tab" href="#config" data-tab="config">Config</a>
+  <a class="tab" href="/ui/">LiteLLM Admin</a>
+  <a class="tab" href="/docs">LiteLLM API</a>
 </nav>
 <main>
-  <section class="card" aria-live="polite">
+  <section class="card" data-panel="status" aria-live="polite">
     <div class="state"><span id="dot" class="dot"></span><span id="state">Checking…</span></div>
     <dl>
       <dt>Requests</dt><dd id="enabled">…</dd>
@@ -91,7 +93,7 @@
     <button id="wake" type="button">Wake</button>
     <p id="message"></p>
   </section>
-  <section class="card" id="settings">
+  <section class="card" data-panel="config" id="settings" hidden>
     <h2>Wake settings</h2>
     <form id="set-form" hidden>
       <label class="check"><input type="checkbox" name="wol_enabled">
@@ -109,7 +111,7 @@
     </form>
     <p id="set-message"></p>
   </section>
-  <section class="card" id="mcp">
+  <section class="card" data-panel="mcp-servers" id="mcp" hidden>
     <h2>MCP servers</h2>
     <ul id="mcp-list"></ul>
     <form id="mcp-add" hidden>
@@ -225,14 +227,14 @@ function mcpSay(text, bad = false) {
 // Resolves to the JSON answer, or throws a sentence for the user.
 async function litellm(method, path, body) {
   const token = litellmToken();
-  if (!token) throw new Error("Sign in to the admin page first (Admin tab), then reload.");
+  if (!token) throw new Error("Sign in to the admin page first (LiteLLM Admin tab), then reload.");
   const r = await fetch(path, {
     method, redirect: "manual", cache: "no-store",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: body && JSON.stringify(body),
   });
   if (r.type === "opaqueredirect") throw new Error("Your portal session has expired, reload the page.");
-  if (r.status === 401) throw new Error("Your admin page session has expired: sign in again (Admin tab), then reload.");
+  if (r.status === 401) throw new Error("Your admin page session has expired: sign in again (LiteLLM Admin tab), then reload.");
   const out = await r.json().catch(() => null);
   if (r.status === 403 && !out) throw new Error("MCP servers are managed from the local networks only.");
   if (!r.ok) {
@@ -341,6 +343,19 @@ $("set-form").addEventListener("submit", async (ev) => {
     refresh();
   } catch (e) { setSay(e.message || String(e), true); }
 });
+
+// The in-page tabs: the address's #part names the panel shown, none is Status.
+function showTab() {
+  const tab = location.hash.slice(1) || "status";
+  const known = document.querySelector(`[data-panel="${CSS.escape(tab)}"]`) ? tab : "status";
+  for (const p of document.querySelectorAll("[data-panel]")) p.hidden = p.dataset.panel !== known;
+  for (const a of document.querySelectorAll("nav a[data-tab]")) {
+    if (a.dataset.tab === known) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  }
+}
+window.addEventListener("hashchange", showTab);
+showTab();
 
 loadSettings();
 listMcp();

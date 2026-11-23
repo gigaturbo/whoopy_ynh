@@ -23,10 +23,15 @@ login is user `admin` with the password set at install or in the
 
 ## The status page
 
-`/` shows whether the Ollama machine is awake, its last wake, a Wake
-button and the [wake settings](config.md#the-status-page). Below it, the [MCP servers](mcp.md#adding-an-mcp-server): listed,
-added and removed, once signed in to the admin page. Its tabs open LiteLLM's admin page (`/ui/`) and the API reference
-(`/docs`).
+`/` has five tabs:
+
+- **Status:** whether the Ollama machine is awake, its last wake, and a Wake
+  button.
+- **MCP Servers:** the [MCP servers](mcp.md#adding-an-mcp-server), listed,
+  added and removed once signed in to LiteLLM's admin page.
+- **Config:** the [wake settings](config.md#the-status-page).
+- **LiteLLM Admin** opens LiteLLM's admin page (`/ui/`), and **LiteLLM API**
+  its API reference (`/docs`).
 
 ## Models
 
