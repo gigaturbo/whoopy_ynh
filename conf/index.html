@@ -11,8 +11,9 @@
      GET and POST /whoopy/settings; the daemon requires the header X-Whoopy: 1
      on each POST.
      The MCP servers section calls LiteLLM's /v1/mcp/server straight from the
-     browser, with LiteLLM's own sign-in cookie `token` as Bearer, as its
-     dashboard does: the daemon never sees a key or a server's token. -->
+     browser, with the key inside LiteLLM's sign-in cookie `token` (a JWT,
+     its `key` claim) as Bearer, as its dashboard does: the daemon never sees
+     a key or a server's token. -->
 <style>
   :root {
     --ink: #05323d; --muted: #4d6f78; --line: #d6ecf1; --bg: #f3fbfd; --card: #fff;
@@ -205,10 +206,15 @@ $("wake").addEventListener("click", async () => {
   refresh();
 });
 
-// MCP servers, through LiteLLM with its sign-in cookie.
+// MCP servers, through LiteLLM with the key its sign-in cookie carries: the
+// cookie is a JWT, refused as a Bearer, whose `key` claim is the session's key.
 function litellmToken() {
   const c = document.cookie.split("; ").find((c) => c.startsWith("token="));
-  return c ? decodeURIComponent(c.slice(6)) : "";
+  if (!c) return "";
+  try {
+    const claims = decodeURIComponent(c.slice(6)).split(".")[1];
+    return JSON.parse(atob(claims.replace(/-/g, "+").replace(/_/g, "/"))).key || "";
+  } catch { return ""; }
 }
 
 function mcpSay(text, bad = false) {
