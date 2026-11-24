@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="62 100 390 390">
+  <defs>
+    <radialGradient id="skin" gradientUnits="userSpaceOnUse" cx="226" cy="170" r="250">
+      <stop offset="0" stop-color="#c2f8ff"/>
+      <stop offset="1" stop-color="#2fbad4"/>
+    </radialGradient>
+    <linearGradient id="gill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59ad6"/>
+      <stop offset="1" stop-color="#c955a8"/>
+    </linearGradient>
+    <linearGradient id="bodyShade" gradientUnits="userSpaceOnUse" x1="0" y1="364" x2="0" y2="432">
+      <stop offset="0" stop-color="#0f6f86" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0f6f86" stop-opacity="0.28"/>
+    </linearGradient>
+    <!-- one piece: a wide flat head, a short neck, a drop-shaped body, no arms -->
+    <path id="bodyShape" d="M 256,132 C 326,132 368,162 368,206 C 368,244 344,268 316,280
+       C 314,286 314,290 316,296 C 338,322 342,370 326,396 C 312,418 286,428 256,428
+       C 226,428 200,418 186,396 C 170,370 174,322 196,296 C 198,290 198,286 196,280
+       C 168,268 144,244 144,206 C 144,162 186,132 256,132 Z"/>
+    <clipPath id="bodyClip"><use href="#bodyShape"/></clipPath>
+  </defs>
+  <title>whoopy mascot</title>
+  <!-- the wooper standing on its small legs with a wide grin -->
+
+  <ellipse cx="258" cy="452" rx="96" ry="9" fill="#0a6479" opacity="0.15"/>
+
+  <!-- tadpole tail curling up behind, a fin along its top -->
+  <path d="M 316,392 C 350,402 388,396 410,372 C 432,348 430,312 410,306 C 394,302 386,320 380,336 C 372,356 350,368 320,366 Z"
+     fill="#6fdcef" stroke="#0f6f86" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M 340,384 C 372,384 398,368 412,340" fill="none" stroke="#b5f5ff" stroke-width="4"
+     stroke-linecap="round"/>
+
+  <!-- small legs and round feet in one outline: outline layer, then fill layer -->
+  <g stroke-linecap="round">
+    <path d="M 230,408 L 224,436 M 282,408 L 288,436" stroke="#0f6f86" stroke-width="24"/>
+    <g fill="#0f6f86" stroke="#0f6f86" stroke-width="10">
+      <ellipse cx="218" cy="440" rx="15" ry="8"/>
+      <ellipse cx="294" cy="440" rx="15" ry="8"/>
+    </g>
+    <path d="M 230,408 L 224,436 M 282,408 L 288,436" stroke="#6fdcef" stroke-width="14"/>
+    <g fill="#6fdcef">
+      <ellipse cx="218" cy="440" rx="15" ry="8"/>
+      <ellipse cx="294" cy="440" rx="15" ry="8"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#0f6f86" stroke-width="3" stroke-linecap="round">
+    <path d="M 208,441 V 446 M 216,442 V 447"/>
+    <path d="M 296,442 V 447 M 304,441 V 446"/>
+  </g>
+
+  <!-- gills: one stalk each side forking into three, outline layer then colour -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#8e2f78" stroke-width="22">
+      <path d="M 156,204 L 130,200 M 130,200 Q 116,186 110,164 M 130,200 L 98,196 M 130,200 Q 116,214 112,236"/>
+      <path d="M 356,204 L 382,200 M 382,200 Q 396,186 402,164 M 382,200 L 414,196 M 382,200 Q 396,214 400,236"/>
+    </g>
+    <g stroke="url(#gill)" stroke-width="13">
+      <path d="M 156,204 L 130,200 M 130,200 Q 116,186 110,164 M 130,200 L 98,196 M 130,200 Q 116,214 112,236"/>
+      <path d="M 356,204 L 382,200 M 382,200 Q 396,186 402,164 M 382,200 L 414,196 M 382,200 Q 396,214 400,236"/>
+    </g>
+  </g>
+  <g fill="#ffd3ef" stroke="#8e2f78" stroke-width="4">
+    <circle cx="110" cy="162" r="10"/>
+    <circle cx="96" cy="196" r="10"/>
+    <circle cx="112" cy="238" r="10"/>
+    <circle cx="402" cy="162" r="10"/>
+    <circle cx="416" cy="196" r="10"/>
+    <circle cx="400" cy="238" r="10"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="107" cy="159" r="3.5"/>
+    <circle cx="93" cy="193" r="3.5"/>
+    <circle cx="399" cy="159" r="3.5"/>
+    <circle cx="413" cy="193" r="3.5"/>
+  </g>
+
+  <!-- body with a pale belly, shaded low -->
+  <use href="#bodyShape" fill="url(#skin)"/>
+  <g clip-path="url(#bodyClip)">
+    <path d="M 222,326 C 206,354 212,414 256,416 C 300,414 306,354 290,326 C 274,314 238,314 222,326 Z"
+       fill="#e6fbff"/>
+    <rect x="150" y="360" width="212" height="90" fill="url(#bodyShade)"/>
+  </g>
+  <use href="#bodyShape" fill="none" stroke="#0f6f86" stroke-width="6" stroke-linejoin="round"/>
+  <ellipse cx="214" cy="152" rx="38" ry="13" transform="rotate(-14,214,152)" fill="#ffffff"
+     opacity="0.6"/>
+  <circle cx="262" cy="140" r="5" fill="#ffffff" opacity="0.6"/>
+
+  <!-- face: wide-set shiny eyes, wide open grin, blush -->
+  <ellipse cx="204" cy="204" rx="15" ry="19" fill="#05323d"/>
+  <ellipse cx="308" cy="204" rx="15" ry="19" fill="#05323d"/>
+  <path d="M 190,212 Q 204,228 218,212 Q 214,222 204,223 Q 194,222 190,212 Z" fill="#1a9ab2"/>
+  <path d="M 294,212 Q 308,228 322,212 Q 318,222 308,223 Q 298,222 294,212 Z" fill="#1a9ab2"/>
+  <circle cx="210" cy="195" r="7" fill="#ffffff"/>
+  <circle cx="314" cy="195" r="7" fill="#ffffff"/>
+  <circle cx="198" cy="213" r="3" fill="#ffffff"/>
+  <circle cx="302" cy="213" r="3" fill="#ffffff"/>
+  <ellipse cx="180" cy="240" rx="16" ry="9" fill="#ffb3cf" opacity="0.9"/>
+  <ellipse cx="332" cy="240" rx="16" ry="9" fill="#ffb3cf" opacity="0.9"/>
+  <g stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.9">
+    <path d="M 172,244 L 178,235"/>
+    <path d="M 180,244 L 186,235"/>
+    <path d="M 324,244 L 330,235"/>
+    <path d="M 332,244 L 338,235"/>
+  </g>
+  <path d="M 222,232 Q 256,244 290,232 Q 284,262 256,262 Q 228,262 222,232 Z" fill="#05323d"
+     stroke="#05323d" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M 238,254 Q 256,244 274,254 Q 268,262 256,262 Q 244,262 238,254 Z" fill="#ff9ac0"/>
+
+</svg>
