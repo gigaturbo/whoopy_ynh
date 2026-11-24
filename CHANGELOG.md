@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1~ynh1 (2026-11-24)
+
+- [x] **FEAT** the page, the CLI and the MCP tools call the sleeping machine the AI server, since it runs more than Ollama
+
 ## 0.4.0~ynh2 (2026-11-24)
 
 - [x] **FEAT** the status page takes the shared look of the family's pages: dark, the mascot in the header, the machine's state in a chip at the top right
