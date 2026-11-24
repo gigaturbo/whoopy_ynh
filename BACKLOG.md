@@ -14,6 +14,14 @@ runtime.
 
 ## Bugs
 
+### B-P-6 · LiteLLM can reach every service on loopback
+
+`open` `low` `filed 2026-11-24`
+
+Both units allow `localhost`, which opens every loopback TCP port, not only PostgreSQL and the MCP servers they need: LDAP, the YunoHost API, a Redis with no password. LiteLLM is a large Python app that reads model and tool answers.
+
+**Fix:** the per-uid nftables table in the `mcp-server-dev` skill (`references/deploy.md`, Loopback by port), first applied in cheruby-search-mcp (its B-P-1), allowing DNS, PostgreSQL and the MCP servers' ports; the list grows with each MCP server added.
+
 ## Features
 
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
@@ -74,38 +82,6 @@ Two ways, to be chosen:
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
 ## Tests
-
-### T-P-4 · the page's wake
-
-`todo` `playtest` `reopened 2026-11-24`
-
-**Do:** with the AI server asleep, `tests/wake-playtest.sh <ssh alias> ollama/<chat model>`.
-**Pass:** status asleep, the page's wake `ok`, then status awake with the last
-wake, and asleep again after its idle time.
-**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: not run. The desktop stayed
-awake 10 min with a 2 min idle time: a desktop session in use and other
-clients loading models. Before: passed at `a292199` (wake `ok` in 11 s,
-asleep after 123 s).
-
-### T-W-1 · a request wakes the AI server
-
-`todo` `playtest` `reopened 2026-11-24`
-
-**Do:** same run as T-P-4.
-**Pass:** a chat request through the domain answers 200; froaky's events show
-one resume; it suspends again after its idle time.
-**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: not run, as T-P-4. Before:
-passed at `a292199` (chat 200 in 26 s, 1 resume, asleep after 113 s).
-
-### T-W-2 · a failed wake
-
-`todo` `playtest` `reopened 2026-11-24`
-
-**Do:** same run as T-P-4.
-**Pass:** with a made-up MAC and 20 s, a 503 after about 21 s, then one at
-once with "a wake failed less than 15 s ago"; the settings restored.
-**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: not run, as T-P-4. Before:
-passed at `a292199`.
 
 ### T-P-5 · the status page through the portal
 
@@ -181,6 +157,9 @@ the result is to the house rules.
 
 ## Closed
 
+- `T-P-4` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 133 s
+- `T-W-1` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1, with `ollama/gemma4-e4b-qat-64k`: chat 200 in 16 s, 1 resume, asleep after 123 s (no `keep_alive` set on the page). A first run with `ollama/gemma4-e4b`, a name gone from the desktop, woke it and got Ollama's 404
+- `T-W-2` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: a made-up MAC and 20 s, a 503 in 21 s "The AI server did not wake: Ollama did not answer within 20 s", then 0 s with "a wake failed less than 15 s ago"; the settings restored with the open servers kept
 - `T-M-8` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: `/mcp/whoopy` 401 without a token; with the master key its 3 tools, described with "AI server", each answers (status, models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)
