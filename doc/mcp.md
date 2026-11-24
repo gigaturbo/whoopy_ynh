@@ -4,12 +4,33 @@ The tool servers Whoopy publishes. A client adds one as an MCP server over
 Streamable HTTP, at `https://<domain>/mcp/<name>`, with a Whoopy token as
 Bearer. A call without a token gets a 401, never the portal.
 
-**Local networks only, unless opened.** The MCP routes answer only the
-networks listed in the panel's [LAN ranges](config.md#lan-ranges); from
-anywhere else they answer 403. Away from home, connect through the VPN first,
-or open a server to the internet with the panel's
-[public MCP servers](config.md#public-mcp-servers). The LLM API under `/v1`
-is not affected.
+**Two checks, by two parts.** A call reaches a server only if both pass:
+
+- **Where from: Whoopy.** A server answers the panel's
+  [LAN ranges](config.md#lan-ranges) only, unless its "From the internet"
+  box is ticked on the status page (MCP Servers tab). nginx asks the wake
+  daemon at each outside call; anything else gets a 403.
+- **Which key: LiteLLM.** A server with "Every key" ticked takes any Whoopy
+  token. Without it, only the keys granted that server: in LiteLLM's admin
+  page, Virtual Keys, a key's MCP servers.
+
+The LLM API under `/v1` is not affected by either.
+
+**From the internet.** Away from home, either connect through the VPN, or
+tick the server's "From the internet" box. Then:
+
+- **Use exactly `/mcp/<name>`.** Other forms of the address
+  (`/<name>/mcp`, `/mcp/web,docs`, `/mcp/<name>/...`) answer 403 from
+  outside, and so do the bare `/mcp` and the routes that add or change a
+  server.
+- **Make a key per outside client**, granted only the servers it needs.
+  Never use the master key away from home: it reaches every server.
+- **A server's write tools are open too.** A key granted `docs` from outside
+  can write files.
+- **Keep server names apart from MCP access groups.** LiteLLM reads a name
+  with no server as an access group's, and would open that group's servers.
+- **If the wake service is down**, outside calls fail (500); the LAN ranges
+  still get in.
 
 **Tool names.** Each tool is named `<server>-<tool>`: LiteLLM puts the
 server's name and a `-` in front of the name the app gives it. The tables
@@ -18,7 +39,10 @@ below use that full name. Each app's own documentation uses the bare name
 
 ## The Ollama machine (`/mcp/whoopy`)
 
-Always on, for any token.
+Published by the package. Who may use it (every key, granted keys, or
+nobody) is the config panel's
+[package MCP server](config.md#access) setting; it cannot be removed from
+the status page. From the internet: its box on the status page, as any other.
 
 | Tool | Does |
 |---|---|
@@ -40,7 +64,7 @@ first. Both work from the LAN ranges only.
 - **Authentication:** Bearer token, the one that app gives. LiteLLM stores it
   encrypted in its database.
 - **Who:** every key, or only the keys it is granted to (per key in the
-  admin page, the key's MCP servers).
+  admin page, the key's MCP servers). Changed later with its "Every key" box.
 
 It is then served at `/mcp/<name>`, its tools named `<server>-<tool>`. A
 server that runs on the Ollama machine does not wake it: only `/mcp/whoopy`

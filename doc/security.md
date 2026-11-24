@@ -11,8 +11,11 @@ token.
   `/media` or `/srv`. Memory capped at 1.5 GB.
 - **The MCP tools are not on the internet** by default: their routes answer
   the local networks only, so a leaked token alone does not reach the tools.
-  A server opened in the panel's public MCP servers is the exception: for
-  it, the key is the only guard.
+  A server opened from the status page is the exception: for it, the key is
+  the only guard. That list sits in the wake daemon's file, which LiteLLM's
+  user can write too: harmless, since LiteLLM already answers every outside
+  call to `/v1` and holds every server's token. Whoever may open the status
+  page (the install's admin group by default) may open a server.
 - **No internet by default**: LiteLLM reaches local networks only until the
   panel's outbound setting says otherwise.
 - **Nothing is fetched at runtime**: price list, blog feed and similar
