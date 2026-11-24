@@ -77,14 +77,15 @@ Two ways, to be chosen:
 
 ### T-P-5 · the status page through the domain
 
-`todo` `playtest` `reopened 2026-11-23`
+`todo` `playtest` `reopened 2026-11-24`
 
 **Do:** through the portal as an admin, open `/`, go through the Status,
 MCP Servers and Config tabs, wake the sleeping desktop, change a wake setting.
 **Pass:** logged out, sent to the portal; the real state, a wake ending
 "Awake after N s"; LiteLLM Admin opens `/ui/`, LiteLLM API opens Swagger;
 the wake settings load on Config, a refused Save shows the daemon's reason,
-a good one survives a reload with no service restart.
+a good one survives a reload with no service restart; the mascot and
+Fredoka load (nginx serves them), the chip follows the state.
 **Last:** 2026-11-23 at `cfd015d`, 0.3.0~ynh4, on loopback with no portal:
 logged out of the portal, `/` 302 to it; the tabs switch, keep their place
 across a reload and back, an unknown `#` shows Status; the real state
@@ -151,6 +152,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)
 - `T-M-10` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1, `web` and `docs` opened on the page (carried from the panel by the upgrade): from the off-site backup server through the domain, `/mcp/web` and `/mcp/docs` 401 without a key and list 2 and 7 tools with the master key; `/mcp/whoopy` 403 with it until its box was ticked (then 401 without a key, applied at once), 403 again once unticked; `/mcp`, `/mcp/sse`, `/mcp/proxy`, `/mcp/enabled`, `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/web/mcp`, `/mcp-rest`, `/v1/mcp/server`, `/ui/mcp/`, `/public/mcp_hub` 403, `/whoopy-mcp-public` 404; `/v1/models` 200. From the LAN over IPv4 and IPv6, every server lists its tools with a key and 401s without; `/key/list` and `/v1/mcp/server` sent to the portal
 - `F-M-14` done 2026-11-23 · the panel's `mcp_public` opens chosen MCP servers to the internet at `/mcp/<name>` exactly, a key still required, the rest LAN-only; checked on a throwaway nginx against the live LiteLLM with `web docs` from outside the LAN ranges: `/mcp/web`, `/mcp/docs` 401 without a key and list their tools with one, `/mcp`, `/mcp/whoopy` (even with the master key), `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/mcp/sse`, `/web/mcp`, `/v1/mcp/server`, `/ui/mcp/`, `/mcp-rest`, `/public/mcp_hub` 403 (0.3.0~ynh5, not yet installed: T-M-10)
