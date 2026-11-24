@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0~ynh2 (2026-11-24)
+
+- [x] **FEAT** the status page takes the shared look of the family's pages: dark, the mascot in the header, the machine's state in a chip at the top right
+- [x] **FEAT** on a wide screen the status page shows the MCP servers beside the status; LiteLLM's links open a new tab and say so
+
 ## 0.4.0~ynh1 (2026-11-23)
 
 - [x] **FEAT** the status page opens each MCP server to the internet with a box, applied at once; the panel's list goes, and its servers stay open
