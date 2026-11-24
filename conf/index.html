@@ -23,19 +23,24 @@
   }
   @media (prefers-color-scheme: dark) {
     :root { --ink: #e4f6fa; --muted: #93b4bc; --line: #1d3a42; --bg: #0b1d22; --card: #112a31;
-            --teal: #4cc4db; --teal-deep: #6fdcef; --down: #6c7f85; }
+            --teal: #4cc4db; --teal-deep: #6fdcef; --down: #6c7f85; --bad: #ef6b63; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); }
-  nav { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding: 0 1rem;
+  nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; padding: 0 1rem;
         background: var(--card); border-bottom: 1px solid var(--line); }
+  nav .tabs, nav .out { display: flex; }
+  nav .out { margin-left: auto; gap: .25rem; }
   nav .brand { display: flex; align-items: center; gap: .5rem; font-weight: 700;
-               margin-right: 1rem; color: var(--ink); text-decoration: none; }
+               color: var(--ink); text-decoration: none; }
   nav .brand img { width: 28px; height: 28px; }
   nav a.tab { padding: .9rem .9rem; color: var(--muted); text-decoration: none;
               border-bottom: 3px solid transparent; }
   nav a.tab:hover { color: var(--ink); }
   nav a.tab[aria-current] { color: var(--ink); border-bottom-color: var(--teal); }
+  /* Links that leave the page for LiteLLM's own: quieter than the tabs. */
+  nav .out a { padding: .9rem .5rem; color: var(--muted); font-size: .9rem; text-decoration: none; }
+  nav .out a:hover { color: var(--ink); text-decoration: underline; }
   main { max-width: 34rem; margin: 2.5rem auto; padding: 0 1rem; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
           padding: 1.5rem; }
@@ -44,6 +49,7 @@
   .dot.up { background: var(--up); box-shadow: 0 0 0 4px color-mix(in srgb, var(--up) 20%, transparent); }
   .dot.waking { background: var(--wait); animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .dot.waking { animation: none; } }
   dl { display: grid; grid-template-columns: max-content 1fr; gap: .5rem 1rem; margin: 1.25rem 0; }
   dt { color: var(--muted); }
   dd { margin: 0; }
@@ -55,34 +61,61 @@
   #message.bad, #mcp-message.bad { color: var(--bad); }
   .card + .card { margin-top: 1.5rem; }
   h2 { font-size: 1.1rem; margin: 0 0 1rem; }
-  #mcp-list { list-style: none; padding: 0; margin: 0 0 1.25rem; }
-  #mcp-list li { display: flex; align-items: center; gap: .75rem; padding: .6rem 0;
-                 border-bottom: 1px solid var(--line); }
-  #mcp-list .what { flex: 1; min-width: 0; }
+  h3 { font-size: 1rem; margin: 1.75rem 0 .75rem; }
+  #mcp-list { list-style: none; padding: 0; margin: 0; }
+  #mcp-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+                 padding: .75rem 0; border-bottom: 1px solid var(--line); }
+  #mcp-list .what { flex: 1 1 13rem; min-width: 0; overflow-wrap: anywhere; }
   #mcp-list .url, .hint { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
-  #mcp-list button { padding: .35rem .8rem; background: var(--bad); }
-  #mcp-list .access { display: flex; gap: 1rem; margin-top: .35rem; font-size: .9rem; }
+  #mcp-list button { padding: .35rem .8rem; background: transparent; color: var(--bad);
+                     border: 1px solid currentColor; }
+  #mcp-list button:hover { background: color-mix(in srgb, var(--bad) 10%, transparent); }
+  #mcp-list .access { display: flex; flex-wrap: wrap; gap: 0 1.25rem; margin-top: .25rem;
+                      font-size: .9rem; }
+  #mcp-list .access label { white-space: nowrap; color: var(--ink); }
   form { display: grid; gap: .75rem; }
   form[hidden] { display: none; }
   label { display: grid; gap: .25rem; color: var(--muted); }
-  label.check { display: flex; align-items: center; gap: .5rem; }
+  label.check { display: flex; align-items: center; gap: .5rem; padding: .25rem 0; cursor: pointer; }
+  input[type=checkbox] { width: 1.1rem; height: 1.1rem; margin: 0; flex: none;
+                         accent-color: var(--teal-deep); cursor: pointer; }
   input[type=text], input[type=url], input[type=password], input[type=number] {
     font: inherit; padding: .5rem .6rem; border-radius: 6px; border: 1px solid var(--line);
     background: var(--bg); color: var(--ink); }
+  input:focus { border-color: var(--teal); }
+  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
   form button { justify-self: start; }
-  #mcp-message, #set-message { margin: .75rem 0 0; min-height: 1.5em; color: var(--muted); }
+  #set-message { margin: .75rem 0 0; min-height: 1.5em; color: var(--muted); }
+  #mcp-message { margin: .75rem 0 0; color: var(--muted); }
+  #mcp-message:empty { display: none; }
   #set-message.bad { color: var(--bad); }
   a { color: var(--teal-deep); }
+  @media (max-width: 40rem) {
+    nav { padding: 0 .75rem; }
+    nav .brand { padding: .55rem 0; }
+    nav .out a { padding: .55rem .4rem; font-size: .85rem; }
+    /* The in-page tabs take a row of their own, shared evenly. */
+    nav .tabs { order: 3; flex-basis: 100%; margin: 0 -.75rem; }
+    nav a.tab { flex: 1; text-align: center; padding: .7rem .25rem; white-space: nowrap; }
+    main { margin: 1rem auto; padding: 0 .75rem; }
+    .card { padding: 1.1rem; }
+    .card + .card { margin-top: 1rem; }
+  }
+  @media (max-width: 22rem) { nav .brand span { display: none; } nav a.tab { font-size: .95rem; } }
 </style>
 </head>
 <body>
 <nav>
-  <a class="brand" href="/"><img src="/favicon.svg" alt="">Whoopy</a>
-  <a class="tab" href="#status" data-tab="status">Status</a>
-  <a class="tab" href="#mcp-servers" data-tab="mcp-servers">MCP Servers</a>
-  <a class="tab" href="#config" data-tab="config">Config</a>
-  <a class="tab" href="/ui/">LiteLLM Admin</a>
-  <a class="tab" href="/docs">LiteLLM API</a>
+  <a class="brand" href="/" aria-label="Whoopy"><img src="/favicon.svg" alt=""><span>Whoopy</span></a>
+  <div class="tabs">
+    <a class="tab" href="#status" data-tab="status">Status</a>
+    <a class="tab" href="#mcp-servers" data-tab="mcp-servers">MCP Servers</a>
+    <a class="tab" href="#config" data-tab="config">Config</a>
+  </div>
+  <div class="out">
+    <a href="/ui/">LiteLLM Admin</a>
+    <a href="/docs">LiteLLM API</a>
+  </div>
 </nav>
 <main>
   <section class="card" data-panel="status" aria-live="polite">
@@ -110,12 +143,19 @@
         <input type="text" name="keep_alive" pattern="[0-9]+[smh]" autocomplete="off"></label>
       <button type="submit">Save</button>
     </form>
-    <p id="set-message"></p>
+    <p id="set-message" role="status"></p>
   </section>
   <section class="card" data-panel="mcp-servers" id="mcp" hidden>
     <h2>MCP servers</h2>
     <ul id="mcp-list"></ul>
+    <p id="mcp-message" role="status"></p>
+    <p class="hint">"From the internet" is Whoopy's: without it a server answers
+      the local networks only. "Every key" is LiteLLM's: without it only the keys
+      granted the server may use it. Grants per key and tool filters are in the
+      <a href="/ui/">admin page</a> (MCP Servers, Virtual Keys). Who may use
+      /mcp/whoopy is set in the YunoHost config panel.</p>
     <form id="mcp-add" hidden>
+      <h3>Add a server</h3>
       <label>Name, served at /mcp/&lt;name&gt;
         <input type="text" name="name" required pattern="[a-z0-9_]{1,32}"
                title="Lower-case letters, digits and _" autocomplete="off"></label>
@@ -126,12 +166,6 @@
       <label class="check"><input type="checkbox" name="all" checked> Every key may use it</label>
       <button type="submit">Add</button>
     </form>
-    <p class="hint">"From the internet" is Whoopy's: without it a server answers
-      the local networks only. "Every key" is LiteLLM's: without it only the keys
-      granted the server may use it. Grants per key and tool filters are in the
-      <a href="/ui/">admin page</a> (MCP Servers, Virtual Keys). Who may use
-      /mcp/whoopy is set in the YunoHost config panel.</p>
-    <p id="mcp-message"></p>
   </section>
 </main>
 <script>
@@ -249,9 +283,10 @@ async function litellm(method, path, body) {
 }
 
 // A checkbox that sends its new state, and puts it back if that fails.
-function toggle(label, checked, send) {
+function toggle(label, tip, checked, send) {
   const box = document.createElement("label");
   box.className = "check";
+  box.title = tip;
   const input = document.createElement("input");
   input.type = "checkbox";
   input.checked = checked;
@@ -272,7 +307,8 @@ function toggle(label, checked, send) {
 
 // The "From the internet" box: the wake daemon keeps the list nginx checks.
 function openToggle(name, checked) {
-  return toggle("From the internet", checked, async (on) => {
+  return toggle("From the internet", "Off: only the local networks reach it. A key is needed either way.",
+    checked, async (on) => {
     const r = await fetch("/whoopy/mcp-public", {
       method: "POST", redirect: "manual",
       headers: { "X-Whoopy": "1", "Content-Type": "application/json" },
@@ -312,7 +348,8 @@ async function listMcp() {
     access.className = "access";
     access.append(openToggle(path, open.includes(path)));
     if (!s.is_config) {
-      access.append(toggle("Every key", !!s.allow_all_keys, (on) =>
+      access.append(toggle("Every key", "Off: only the keys granted this server may use it.",
+        !!s.allow_all_keys, (on) =>
         litellm("PUT", "/v1/mcp/server", { server_id: s.server_id, allow_all_keys: on })));
     }
     what.append(name, url, access);
