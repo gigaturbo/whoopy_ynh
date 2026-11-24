@@ -1,4 +1,4 @@
-"""Have the Ollama machine woken before LiteLLM sends it a request.
+"""Have the AI server woken before LiteLLM sends it a request.
 
 Loaded by LiteLLM from `litellm_settings.callbacks` ("whoopy_wake.handler"),
 from the directory of config.yaml. The waking itself is done by the wake
@@ -49,7 +49,7 @@ WAIT_S = 540 + 10
 OLLAMA_ROUTES = ("ollama/", "ollama-embed/")
 KEEP_ALIVE_TTL = 10.0
 
-# The `mcp_servers` names in config.yaml that run on the Ollama machine; none
+# The `mcp_servers` names in config.yaml that run on the AI server; none
 # today. A server on this host, whoopy or any other, must never be listed.
 WAKE_MCP_SERVERS: set[str] = set()
 
@@ -88,7 +88,7 @@ class WakeOnLan(CustomLogger):
         try:
             resp = await self._client.post("/ensure")
         except httpx.TimeoutException:
-            return f"The Ollama machine did not answer within {int(WAIT_S)} s."
+            return f"The AI server did not answer within {int(WAIT_S)} s."
         except httpx.TransportError as err:
             # Daemon down or restarting: let the request through. If Ollama
             # is awake it answers; if not, the client gets the connection error.
@@ -100,7 +100,7 @@ class WakeOnLan(CustomLogger):
             reason = resp.json().get("reason") or "no reason given"
         except ValueError:
             reason = f"HTTP {resp.status_code}"
-        return f"The Ollama machine did not wake: {reason}."
+        return f"The AI server did not wake: {reason}."
 
     async def async_pre_call_check(self, deployment, parent_otel_span):
         params = deployment.get("litellm_params") or {}

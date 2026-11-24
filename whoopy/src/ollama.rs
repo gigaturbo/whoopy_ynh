@@ -1,4 +1,4 @@
-//! The Ollama machine: its HTTP API and its Wake-on-LAN packet.
+//! The AI server: its HTTP API and its Wake-on-LAN packet.
 
 use std::{
     io,

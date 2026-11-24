@@ -1,4 +1,4 @@
-//! Waking the Ollama machine: one wake at a time, shared by every caller.
+//! Waking the AI server: one wake at a time, shared by every caller.
 //!
 //! A wake probes Ollama, sends a Wake-on-LAN packet while it does not answer,
 //! resends it every `RESEND`, and gives up after the timeout. A success is

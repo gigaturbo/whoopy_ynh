@@ -38,7 +38,7 @@ name = "Whoopy"
         choices.all = "Every key"
         choices.granted = "Only keys granted it (LiteLLM's admin page, Virtual Keys)"
         choices.off = "Nobody: the server is not published"
-        help = "Its tools wake the Ollama machine and show its state and models. Whether it answers from the internet is set on the status page, MCP Servers tab, like any other server."
+        help = "Its tools wake the AI server and show its state and models. Whether it answers from the internet is set on the status page, MCP Servers tab, like any other server."
         bind = "settings"
 
         [main.access.ui_password]

@@ -23,10 +23,10 @@ login is user `admin` with the password set at install or in the
 
 ## The status page
 
-The chip at the top right says whether the Ollama machine is awake, waking,
+The chip at the top right says whether the AI server is awake, waking,
 asleep, or out of reach (offline). `/` has three tabs and two links out:
 
-- **Status:** whether the Ollama machine is awake, its last wake, and a Wake
+- **Status:** whether the AI server is awake, its last wake, and a Wake
   button. On a wide screen the MCP servers sit beside it.
 - **MCP Servers:** the [MCP servers](mcp.md#adding-an-mcp-server), listed,
   added and removed once signed in to LiteLLM's admin page.
@@ -42,7 +42,7 @@ asleep, or out of reach (offline). `/` has three tabs and two links out:
 | `ollama-embed/<name>` | the same machine's embedding models |
 | anything else | the models added in LiteLLM's admin page (`/ui/`, Models) |
 
-While the Ollama machine sleeps, `/v1/models` lists none of its models. A
+While the AI server sleeps, `/v1/models` lists none of its models. A
 listing is cached for 5 minutes, so they appear up to 5 minutes after a wake.
 
 ## Calls

@@ -180,7 +180,7 @@ whoopy_configure() {
     ynh_config_add_nginx
 
     yunohost service add "$app" --description="Whoopy, the AI gateway (LiteLLM)"
-    yunohost service add "$app-wake" --description="Whoopy, wakes the Ollama machine"
+    yunohost service add "$app-wake" --description="Whoopy, wakes the AI server"
 }
 
 # The nginx `allow` lines for the MCP routes, from a space-separated list of

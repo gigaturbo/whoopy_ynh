@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 A YunoHost package that wraps the LiteLLM proxy as an AI gateway in front of
-an Ollama machine that sleeps, and wakes it by Wake-on-LAN on demand.
+an AI server that sleeps, and wakes it by Wake-on-LAN on demand.
 
 The host's own `CLAUDE.md` still applies, and its rules win: installing or
 upgrading this app touches a running service and a database, so ask first.

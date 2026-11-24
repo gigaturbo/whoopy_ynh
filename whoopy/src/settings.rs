@@ -62,7 +62,7 @@ impl Settings {
             );
         }
         if self.wol_enabled && self.wol_mac.is_empty() {
-            return Err("A MAC address is needed to wake the Ollama machine.".into());
+            return Err("A MAC address is needed to wake the AI server.".into());
         }
         if !(MIN_TIMEOUT_S..=MAX_TIMEOUT_S).contains(&self.wake_timeout_s) {
             return Err(format!(

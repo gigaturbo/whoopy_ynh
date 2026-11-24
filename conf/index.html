@@ -144,7 +144,7 @@ input[type=checkbox]{width:1.25rem;height:1.25rem;min-height:0;margin:0;flex:non
 </nav>
 <main class="panels">
   <section class="panel" data-panel="status" aria-live="polite">
-    <h2>Ollama machine</h2>
+    <h2>AI server</h2>
     <div class="state"><span id="dot" class="dot"></span><span id="state">Checking…</span></div>
     <dl>
       <dt>Requests</dt><dd id="enabled">…</dd>
@@ -182,13 +182,13 @@ input[type=checkbox]{width:1.25rem;height:1.25rem;min-height:0;margin:0;flex:non
     <h2>Wake settings</h2>
     <form id="set-form" hidden>
       <label class="check"><input type="checkbox" name="wol_enabled">
-        Wake the Ollama machine when a request needs it</label>
+        Wake the AI server when a request needs it</label>
       <label class="row"><span>MAC address of its network card, the one with Wake-on-LAN on</span>
         <input type="text" name="wol_mac" placeholder="aa:bb:cc:dd:ee:ff" autocomplete="off"
                pattern="([0-9a-fA-F]{2}[:\-]){5}[0-9a-fA-F]{2}"></label>
       <label class="row"><span>Broadcast address for the wake packet</span>
         <input type="text" name="wol_broadcast" required placeholder="255.255.255.255"></label>
-      <label class="row"><span>Seconds to wait for Ollama after a wake, 10 to 540</span>
+      <label class="row"><span>Seconds to wait for the AI server after a wake, 10 to 540</span>
         <input type="number" name="wake_timeout_s" required min="10" max="540"></label>
       <label class="row"><span>How long a model stays loaded after a request, e.g. 5m; empty: Ollama's own</span>
         <input type="text" name="keep_alive" pattern="[0-9]+[smh]" autocomplete="off"></label>
@@ -223,9 +223,9 @@ function show(st) {
   $("dot").className = `dot ${state}`;
   chip(...{ up: ["awake", "ok"], waking: ["waking", "warn"], down: ["asleep", ""] }[state]);
   $("state").textContent = {
-    up: "The Ollama machine is awake",
-    waking: "The Ollama machine is waking up",
-    down: "The Ollama machine is asleep",
+    up: "The AI server is awake",
+    waking: "The AI server is waking up",
+    down: "The AI server is asleep",
   }[state];
   $("enabled").textContent = st.enabled
     ? "wake it when they need a local model"

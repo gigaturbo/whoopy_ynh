@@ -37,7 +37,7 @@ server's name and a `-` in front of the name the app gives it. The tables
 below use that full name. Each app's own documentation uses the bare name
 (`read_file` there is `docs-read_file` here).
 
-## The Ollama machine (`/mcp/whoopy`)
+## The AI server (`/mcp/whoopy`)
 
 Published by the package. Who may use it (every key, granted keys, or
 nobody) is the config panel's
@@ -67,7 +67,7 @@ first. Both work from the LAN ranges only.
   admin page, the key's MCP servers). Changed later with its "Every key" box.
 
 It is then served at `/mcp/<name>`, its tools named `<server>-<tool>`. A
-server that runs on the Ollama machine does not wake it: only `/mcp/whoopy`
+server that runs on the AI server does not wake it: only `/mcp/whoopy`
 does.
 
 The same can be done with the API, as an admin, from the LAN ranges:

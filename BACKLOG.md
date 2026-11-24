@@ -8,7 +8,7 @@ runtime.
 
 | Letter | Covers |
 |---|---|
-| `W` | Waking the Ollama machine |
+| `W` | Waking the AI server |
 | `P` | The packaging, the lifecycle scripts and the config panel |
 | `M` | The MCP tool servers Whoopy publishes |
 

@@ -1,5 +1,5 @@
 [Unit]
-Description=Whoopy: LiteLLM gateway in front of Ollama (__APP__)
+Description=Whoopy: LiteLLM gateway in front of the AI server (__APP__)
 After=network.target postgresql.service __APP__-wake.service
 Wants=postgresql.service __APP__-wake.service
 

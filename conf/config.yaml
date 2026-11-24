@@ -22,13 +22,13 @@ model_list:
 
 {%- if whoopy_mcp != "off" %}
 mcp_servers:
-  # Wake, status and model list of the Ollama machine, from whoopy-wake on
+  # Wake, status and model list of the AI server, from whoopy-wake on
   # loopback, at /mcp/whoopy. Who may use it is the panel's choice: every key
   # by default, since a chat request wakes the machine anyway.
   whoopy:
     url: "http://127.0.0.1:{{ port_mcp }}/mcp"
     transport: "http"
-    description: "Wake the Ollama machine, see its state and its models"
+    description: "Wake the AI server, see its state and its models"
     auth_type: "bearer_token"
     authentication_token: os.environ/WHOOPY_MCP_TOKEN
     allow_all_keys: {{ "true" if whoopy_mcp == "all" else "false" }}
@@ -58,7 +58,7 @@ general_settings:
   disable_env_credential_login: true
 {%- endif %}
   # A health check sends a real completion: it would load a model and keep
-  # the Ollama machine awake. Leave off.
+  # the AI server awake. Leave off.
   background_health_checks: false
   # Behind nginx every client is 127.0.0.1; the login throttle needs the real one.
   trusted_proxy_ranges: ["127.0.0.1/32", "::1/128"]

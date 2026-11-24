@@ -2,7 +2,7 @@
 
 # Whoopy, an AI gateway for YunoHost
 
-One authenticated endpoint for the models on an Ollama machine that sleeps.
+One authenticated endpoint for the models on an AI server that sleeps.
 Whoopy wraps the [LiteLLM](https://github.com/BerriAI/litellm) proxy and wakes
 the machine by Wake-on-LAN when a request arrives.
 
@@ -15,7 +15,7 @@ the machine by Wake-on-LAN when a request arrives.
   Requests arriving together share one wake.
 - **A status page** at `/`: is the machine awake, its last wake, a Wake
   button, and tabs to LiteLLM's admin page and the API reference.
-- **The Ollama machine as MCP tools** at `/mcp/whoopy`: wake it ahead of
+- **The AI server as MCP tools** at `/mcp/whoopy`: wake it ahead of
   time, see its state, list its models.
 - **Any other MCP server** on the network, added from the status page and
   served at `/mcp/<name>` behind the same tokens.
@@ -27,7 +27,7 @@ the machine by Wake-on-LAN when a request arrives.
 ## Install
 
 Needs YunoHost 12.1 or later on arm64, network access during install,
-upgrade and restore, and an Ollama machine on the same network with
+upgrade and restore, and an AI server on the same network with
 Wake-on-LAN enabled on its card.
 
 ```bash

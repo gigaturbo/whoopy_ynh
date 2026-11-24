@@ -1,4 +1,4 @@
-//! whoopy: wakes the Ollama machine for the Whoopy gateway.
+//! whoopy: wakes the AI server for the Whoopy gateway.
 //!
 //! `whoopy serve` is the daemon (whoopy-wake.service). `wake` and `status`
 //! ask it over its socket, so every wake, from the panel or a request, is the
@@ -23,7 +23,7 @@ use hyper_util::rt::TokioIo;
 use serde_json::Value;
 
 #[derive(Parser)]
-#[command(version, about = "Wakes the Ollama machine for the Whoopy gateway")]
+#[command(version, about = "Wakes the AI server for the Whoopy gateway")]
 struct Cli {
     /// The daemon's socket.
     #[arg(
@@ -41,9 +41,9 @@ struct Cli {
 enum Command {
     /// Run the daemon.
     Serve(ServeArgs),
-    /// Wake the Ollama machine and wait until it answers.
+    /// Wake the AI server and wait until it answers.
     Wake,
-    /// Tell whether the Ollama machine is awake, and how the last wake went.
+    /// Tell whether the AI server is awake, and how the last wake went.
     Status,
 }
 
@@ -112,7 +112,7 @@ async fn wake(socket: &Path) -> Result<(), String> {
     let (code, body) = ask(socket, "POST", "/wake").await?;
     if code == 200 {
         println!(
-            "Ollama answers, {} s after the wake request.",
+            "The AI server answers, {} s after the wake request.",
             body["seconds"]
         );
         return Ok(());
@@ -126,9 +126,9 @@ async fn wake(socket: &Path) -> Result<(), String> {
 async fn status(socket: &Path) -> Result<(), String> {
     let (_, body) = ask(socket, "GET", "/status").await?;
     let state = match (body["up"].as_bool(), body["waking"].as_bool()) {
-        (Some(true), _) => "Ollama is awake.",
-        (_, Some(true)) => "Ollama is waking up.",
-        _ => "Ollama is asleep or unreachable.",
+        (Some(true), _) => "The AI server is awake.",
+        (_, Some(true)) => "The AI server is waking up.",
+        _ => "The AI server is asleep or unreachable.",
     };
     println!("{state}");
     if body["enabled"] != Value::Bool(true) {

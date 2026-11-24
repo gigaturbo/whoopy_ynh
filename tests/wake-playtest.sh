@@ -1,12 +1,12 @@
 #!/bin/bash
 # Runs the wake playtests T-P-4, T-W-1 and T-W-2 against the installed app.
 #
-#   tests/wake-playtest.sh <ssh alias of the Ollama machine> <chat model>
+#   tests/wake-playtest.sh <ssh alias of the AI server> <chat model>
 #
 # The model as /v1/models names it, `ollama/<name>`. Not read from there:
 # while Ollama sleeps that list holds a placeholder.
 #
-# Run on the server as an account with passwordless sudo. The Ollama machine
+# Run on the server as an account with passwordless sudo. The AI server
 # must run froaky-ai-server, whose `events` show its resumes. Lower its idle
 # time first (`froaky settings --idle 2m`) or each wait takes 30 min. The
 # script unloads Ollama's models itself: froaky never suspends with one loaded.
@@ -14,8 +14,8 @@
 # page's calls are made on the daemon's loopback port, as nginx would.
 set -u
 
-desk=${1:?usage: $0 <ssh alias of the Ollama machine> <chat model>}
-model=${2:?usage: $0 <ssh alias of the Ollama machine> <chat model>}
+desk=${1:?usage: $0 <ssh alias of the AI server> <chat model>}
+model=${2:?usage: $0 <ssh alias of the AI server> <chat model>}
 app=whoopy
 domain=$(sudo -n yunohost app setting $app domain)
 install_dir=$(sudo -n yunohost app setting $app install_dir)

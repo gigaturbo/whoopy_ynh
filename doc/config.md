@@ -13,13 +13,13 @@ change them.
 
 | Setting | Default | Effect |
 |---|---|---|
-| Wake the Ollama machine | off | wake it when a request arrives and it does not answer |
+| Wake the AI server | off | wake it when a request arrives and it does not answer |
 | MAC address | empty | its card with Wake-on-LAN enabled; needed to switch the wake on |
 | Broadcast address | `255.255.255.255` | where the wake packet goes; the subnet's own broadcast if the server has several networks |
 | Seconds to wait | `90` | 10 to 540; past it the request fails with a 503 |
 | How long a model stays loaded | empty | after a request through Whoopy, e.g. `5m`. Empty: Ollama's own setting. A request that sets `keep_alive` itself keeps its own. |
 
-The page's Wake button sends the wake packet and waits for Ollama, with
+The page's Wake button sends the wake packet and waits for the AI server, with
 these settings. They are kept in `/var/lib/whoopy/settings.json`, which
 Whoopy's backup carries, with the MCP servers opened to the internet on the
 MCP Servers tab (see [MCP servers](mcp.md)).

@@ -23,7 +23,7 @@ fn text(s: String) -> Result<CallToolResult, ErrorData> {
 #[tool_router]
 impl Tools {
     #[tool(
-        description = "Wake the Ollama machine (the desktop that runs the local models) \
+        description = "Wake the AI server (the machine that runs the local models) \
         and wait until it answers, up to the configured timeout. Chat requests to a local \
         model already wake it; use this to wake it ahead of time."
     )]
@@ -31,18 +31,18 @@ impl Tools {
         let out = self.waker.ensure_awake(true).await;
         if out.ok {
             return text(format!(
-                "The Ollama machine is awake (waited {} s).",
+                "The AI server is awake (waited {} s).",
                 out.seconds
             ));
         }
         Ok(CallToolResult::error(vec![ContentBlock::text(format!(
-            "The Ollama machine did not wake: {}.",
+            "The AI server did not wake: {}.",
             out.reason
         ))]))
     }
 
     #[tool(
-        description = "Tell whether the Ollama machine is awake, which models it has in \
+        description = "Tell whether the AI server is awake, which models it has in \
         memory, and how the last wake went. Never wakes it."
     )]
     async fn status(&self) -> Result<CallToolResult, ErrorData> {
@@ -63,13 +63,13 @@ impl Tools {
     }
 
     #[tool(
-        description = "List the models installed on the Ollama machine. Never wakes it: \
+        description = "List the models installed on the AI server. Never wakes it: \
         while it sleeps, the list is unavailable."
     )]
     async fn models(&self) -> Result<CallToolResult, ErrorData> {
         match self.waker.machine().installed().await {
             Some(models) => text(models.join("\n")),
-            None => text("The Ollama machine is asleep or unreachable; use wake first.".into()),
+            None => text("The AI server is asleep or unreachable; use wake first.".into()),
         }
     }
 }
