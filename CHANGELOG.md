@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0~ynh1 (2026-11-23)
+
+- [x] **FEAT** the status page opens each MCP server to the internet with a box, applied at once; the panel's list goes, and its servers stay open
+- [x] **FEAT** the status page switches each MCP server between every key and granted keys
+- [x] **FEAT** the panel chooses who may use `/mcp/whoopy`: every key, granted keys or nobody
+
 ## 0.3.0~ynh5 (2026-11-23)
 
 - [x] **FEAT** the panel can open chosen MCP servers to the internet, at `/mcp/<name>` with a key; the others stay on the local networks
