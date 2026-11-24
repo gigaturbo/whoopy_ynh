@@ -23,15 +23,16 @@ login is user `admin` with the password set at install or in the
 
 ## The status page
 
-`/` has five tabs:
+The chip at the top right says whether the Ollama machine is awake, waking,
+asleep, or out of reach (offline). `/` has three tabs and two links out:
 
 - **Status:** whether the Ollama machine is awake, its last wake, and a Wake
-  button.
+  button. On a wide screen the MCP servers sit beside it.
 - **MCP Servers:** the [MCP servers](mcp.md#adding-an-mcp-server), listed,
   added and removed once signed in to LiteLLM's admin page.
 - **Config:** the [wake settings](config.md#the-status-page).
-- **LiteLLM Admin** opens LiteLLM's admin page (`/ui/`), and **LiteLLM API**
-  its API reference (`/docs`).
+- **LiteLLM Admin** opens LiteLLM's admin page (`/ui/`) in a new tab, and
+  **LiteLLM API** its API reference (`/docs`).
 
 ## Models
 
