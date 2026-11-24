@@ -86,7 +86,9 @@ MCP Servers and Config tabs, wake the sleeping desktop, change a wake setting.
 the wake settings load on Config, a refused Save shows the daemon's reason,
 a good one survives a reload with no service restart; the mascot and
 Fredoka load (nginx serves them), the chip follows the state.
-**Last:** 2026-11-23 at `cfd015d`, 0.3.0~ynh4, on loopback with no portal:
+**Last:** 2026-11-24 at `321e68c`, 0.4.0~ynh2: the user confirmed the
+page works through the portal in the new look. Before that,
+2026-11-23 at `cfd015d`, 0.3.0~ynh4, on loopback with no portal:
 logged out of the portal, `/` 302 to it; the tabs switch, keep their place
 across a reload and back, an unknown `#` shows Status; the real state
 (awake); Config: an empty MAC refused with "A MAC address is needed to wake
