@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Whoopy</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#05323d">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Whoopy</title>
 <!-- Served by the wake daemon (whoopy serve), behind the portal's admin
      permission. Its calls: GET /whoopy/status, POST /whoopy/wake, and
      GET and POST /whoopy/settings; the daemon requires the header X-Whoopy: 1
@@ -13,159 +15,186 @@
      The MCP servers section calls LiteLLM's /v1/mcp/server straight from the
      browser, with the key inside LiteLLM's sign-in cookie `token` (a JWT,
      its `key` claim) as Bearer, as its dashboard does: the daemon never sees
-     a key or a server's token. -->
+     a key or a server's token.
+     The look is the pokestyle-ui skill's: its layout.md CSS, then this page's
+     own pieces below it. -->
 <style>
-  :root {
-    --ink: #05323d; --muted: #4d6f78; --line: #d6ecf1; --bg: #f3fbfd; --card: #fff;
-    --teal: #1a9ab2; --teal-deep: #0f6f86; --pink: #c955a8;
-    --up: #1f9d6b; --wait: #d08a12; --down: #8a9aa0; --bad: #c2413a;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --ink: #e4f6fa; --muted: #93b4bc; --line: #1d3a42; --bg: #0b1d22; --card: #112a31;
-            --teal: #4cc4db; --teal-deep: #6fdcef; --down: #6c7f85; --bad: #ef6b63; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); }
-  nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; padding: 0 1rem;
-        background: var(--card); border-bottom: 1px solid var(--line); }
-  nav .tabs, nav .out { display: flex; }
-  nav .out { margin-left: auto; gap: .25rem; }
-  nav .brand { display: flex; align-items: center; gap: .5rem; font-weight: 700;
-               color: var(--ink); text-decoration: none; }
-  nav .brand img { width: 28px; height: 28px; }
-  nav a.tab { padding: .9rem .9rem; color: var(--muted); text-decoration: none;
-              border-bottom: 3px solid transparent; }
-  nav a.tab:hover { color: var(--ink); }
-  nav a.tab[aria-current] { color: var(--ink); border-bottom-color: var(--teal); }
-  /* Links that leave the page for LiteLLM's own: quieter than the tabs. */
-  nav .out a { padding: .9rem .5rem; color: var(--muted); font-size: .9rem; text-decoration: none; }
-  nav .out a:hover { color: var(--ink); text-decoration: underline; }
-  main { max-width: 34rem; margin: 2.5rem auto; padding: 0 1rem; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-          padding: 1.5rem; }
-  .state { display: flex; align-items: center; gap: .75rem; font-size: 1.35rem; font-weight: 600; }
-  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--down); flex: none; }
-  .dot.up { background: var(--up); box-shadow: 0 0 0 4px color-mix(in srgb, var(--up) 20%, transparent); }
-  .dot.waking { background: var(--wait); animation: pulse 1.2s ease-in-out infinite; }
-  @keyframes pulse { 50% { opacity: .35; } }
-  @media (prefers-reduced-motion: reduce) { .dot.waking { animation: none; } }
-  dl { display: grid; grid-template-columns: max-content 1fr; gap: .5rem 1rem; margin: 1.25rem 0; }
-  dt { color: var(--muted); }
-  dd { margin: 0; }
-  button { font: inherit; font-weight: 600; padding: .65rem 1.4rem; border-radius: 8px; border: 0;
-           background: var(--teal-deep); color: #fff; cursor: pointer; }
-  @media (prefers-color-scheme: dark) { button { color: var(--bg); } }
-  button:disabled { opacity: .5; cursor: default; }
-  #message { margin: .75rem 0 0; min-height: 1.5em; color: var(--muted); }
-  #message.bad, #mcp-message.bad { color: var(--bad); }
-  .card + .card { margin-top: 1.5rem; }
-  h2 { font-size: 1.1rem; margin: 0 0 1rem; }
-  h3 { font-size: 1rem; margin: 1.75rem 0 .75rem; }
-  #mcp-list { list-style: none; padding: 0; margin: 0; }
-  #mcp-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
-                 padding: .75rem 0; border-bottom: 1px solid var(--line); }
-  #mcp-list .what { flex: 1 1 13rem; min-width: 0; overflow-wrap: anywhere; }
-  #mcp-list .url, .hint { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
-  #mcp-list button { padding: .35rem .8rem; background: transparent; color: var(--bad);
-                     border: 1px solid currentColor; }
-  #mcp-list button:hover { background: color-mix(in srgb, var(--bad) 10%, transparent); }
-  #mcp-list .access { display: flex; flex-wrap: wrap; gap: 0 1.25rem; margin-top: .25rem;
-                      font-size: .9rem; }
-  #mcp-list .access label { white-space: nowrap; color: var(--ink); }
-  form { display: grid; gap: .75rem; }
-  form[hidden] { display: none; }
-  label { display: grid; gap: .25rem; color: var(--muted); }
-  label.check { display: flex; align-items: center; gap: .5rem; padding: .25rem 0; cursor: pointer; }
-  input[type=checkbox] { width: 1.1rem; height: 1.1rem; margin: 0; flex: none;
-                         accent-color: var(--teal-deep); cursor: pointer; }
-  input[type=text], input[type=url], input[type=password], input[type=number] {
-    font: inherit; padding: .5rem .6rem; border-radius: 6px; border: 1px solid var(--line);
-    background: var(--bg); color: var(--ink); }
-  input:focus { border-color: var(--teal); }
-  :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
-  form button { justify-self: start; }
-  #set-message { margin: .75rem 0 0; min-height: 1.5em; color: var(--muted); }
-  #mcp-message { margin: .75rem 0 0; color: var(--muted); }
-  #mcp-message:empty { display: none; }
-  #set-message.bad { color: var(--bad); }
-  a { color: var(--teal-deep); }
-  @media (max-width: 40rem) {
-    nav { padding: 0 .75rem; }
-    nav .brand { padding: .55rem 0; }
-    nav .out a { padding: .55rem .4rem; font-size: .85rem; }
-    /* The in-page tabs take a row of their own, shared evenly. */
-    nav .tabs { order: 3; flex-basis: 100%; margin: 0 -.75rem; }
-    nav a.tab { flex: 1; text-align: center; padding: .7rem .25rem; white-space: nowrap; }
-    main { margin: 1rem auto; padding: 0 .75rem; }
-    .card { padding: 1.1rem; }
-    .card + .card { margin-top: 1rem; }
-  }
-  @media (max-width: 22rem) { nav .brand span { display: none; } nav a.tab { font-size: .95rem; } }
+:root{--bg:#05191f;--panel:#0a242c;--panel-2:#0f3039;--line:#0f6f86;
+--ink:#e8fbff;--muted:#94c3cd;--main:#2fbad4;--main-ink:#05191f;
+--second:#f59ad6;--second-ink:#05191f;--band-1:#0a6479;--band-2:#05323d}
+:root{--ok:#4cc38a;--warn:#f2b33d;--bad:#ff6b5e;
+--s-1:.25rem;--s-2:.5rem;--s-3:.75rem;--s-4:1rem;--s-5:1.5rem;--s-6:2rem}
+*,*::before,*::after{box-sizing:border-box;border-radius:0}
+@font-face{font-family:Fredoka;src:url(/fredoka.woff2) format("woff2");font-weight:300 700;font-display:swap}
+html{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;color-scheme:dark}
+body{margin:0}
+h1,h2,h3,.tabs a,button,.btn,.chip{font-family:Fredoka,system-ui,sans-serif}
+code,.mono{font-family:ui-monospace,"DejaVu Sans Mono",monospace;overflow-wrap:anywhere}
+a{color:var(--main)}
+:focus-visible{outline:3px solid var(--main);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* header band */
+.band{display:flex;align-items:center;gap:var(--s-4);padding:var(--s-4) var(--s-5) 0;
+  background:radial-gradient(circle at 20% 30%,var(--band-1),var(--band-2));
+  border-bottom:4px solid var(--second)}
+.band h1{margin:0;color:#fff;font-size:2rem;text-shadow:3px 3px 0 var(--band-2)}
+.mascot{width:7em;height:auto;margin-bottom:-2.5em;flex:none;position:relative;z-index:1}
+.chip{margin-left:auto;padding:var(--s-1) var(--s-3);border:2px solid currentColor;
+  background:var(--panel);color:var(--muted);text-decoration:none;white-space:nowrap}
+.chip.ok{color:var(--ok)}.chip.warn{color:var(--warn)}.chip.bad{color:var(--bad)}
+
+/* tabs: room on the left for the mascot's overhang */
+.tabs{display:flex;gap:var(--s-1);padding:0 var(--s-5) 0 calc(7em + var(--s-6));position:relative;
+  background:var(--panel);border-bottom:2px solid var(--line);overflow-x:auto}
+.tabs a{padding:var(--s-3) var(--s-4);min-height:44px;color:var(--ink);text-decoration:none;
+  border-bottom:4px solid transparent;white-space:nowrap}
+.tabs a[aria-current=page]{border-bottom-color:var(--main);color:var(--main)}
+.tabs a.ext{color:var(--muted)}
+.tabs a:not(.ext)+a.ext{margin-left:auto;border-left:2px solid var(--line)}
+.ext-icon{width:.8em;height:.8em;margin-left:.25em;vertical-align:-.05em}
+
+/* panels */
+.panels{display:grid;gap:var(--s-5);padding:var(--s-6) var(--s-5);max-width:60em;margin:0 auto}
+.panel{background:var(--panel);border:2px solid var(--line);box-shadow:5px 5px 0 var(--second);
+  padding:var(--s-4) var(--s-5);min-width:0}
+.panel h2{margin:0 0 var(--s-3);font-size:1.25rem;color:var(--second)}
+.panel>p{max-width:75ch}
+@media (min-width:75em){
+  .panels{max-width:120em;grid-template-columns:repeat(auto-fit,minmax(max(26em,calc((100% - 2*var(--s-5))/3)),1fr));grid-auto-flow:row dense}
+  .panel.wide{grid-column:1/-1}}
+
+/* buttons and forms */
+button,.btn{min-height:44px;padding:var(--s-2) var(--s-4);border:2px solid var(--muted);
+  background:var(--panel-2);color:var(--ink);font-size:1rem;cursor:pointer;
+  box-shadow:3px 3px 0 var(--bg)}
+button.main,.btn.main{background:var(--main);color:var(--main-ink);border-color:var(--main)}
+button.danger{border-color:var(--bad);color:var(--bad)}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--bg)}
+.row{display:grid;grid-template-columns:minmax(10em,1fr) 2fr;gap:var(--s-2) var(--s-4);align-items:center}
+input,select,textarea{min-height:44px;padding:var(--s-2);background:var(--panel-2);color:var(--ink);
+  border:2px solid var(--muted);font:inherit;min-width:0}
+
+/* phone */
+@media (max-width:40em){
+  .band{padding:var(--s-3) var(--s-3) 0}
+  .band h1{font-size:1.5rem}
+  .mascot{width:4.5em;margin-bottom:-1.5em}
+  .tabs{padding-left:calc(4.5em + var(--s-4))}
+  .tabs a{flex:1 0 auto;text-align:center;padding:var(--s-3) var(--s-2)}
+  .panels{padding:var(--s-5) var(--s-3)}
+  .row{grid-template-columns:1fr}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Whoopy's own pieces. A wide screen shows the MCP servers beside the
+   status; a tab holding one panel stays at reading width. */
+@media (min-width:75em){
+  .panels{align-items:start}
+  .panels[data-tab=status] [data-panel=mcp-servers][hidden]{display:block}
+  .panels:not([data-tab=status]){max-width:60em}}
+.state{display:flex;align-items:center;gap:var(--s-3);font:600 1.35rem Fredoka,system-ui,sans-serif}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--muted);flex:none}
+.dot.up{background:var(--ok)}
+.dot.waking{background:var(--warn);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:var(--s-2) var(--s-4);margin:var(--s-4) 0 var(--s-5)}
+dt{color:var(--muted)}
+dd{margin:0;overflow-wrap:anywhere}
+button:disabled{opacity:.5;cursor:default;box-shadow:none}
+.msg{margin:var(--s-3) 0 0;color:var(--muted)}
+.msg:empty{display:none}
+.msg.bad{color:var(--bad)}
+.hint{color:var(--muted);font-size:.9rem}
+h3{font-size:1.1rem;margin:var(--s-5) 0 var(--s-3)}
+form{display:grid;gap:var(--s-3)}
+form[hidden]{display:none}
+form button{justify-self:start}
+.row>span{color:var(--muted)}
+label.check{display:flex;align-items:center;gap:var(--s-2);min-height:44px;cursor:pointer}
+input[type=checkbox]{width:1.25rem;height:1.25rem;min-height:0;margin:0;flex:none;
+  accent-color:var(--main);cursor:pointer}
+#mcp-list{list-style:none;padding:0;margin:0}
+#mcp-list li{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2) var(--s-3);
+  padding:var(--s-3) 0;border-bottom:1px solid var(--line)}
+#mcp-list .what{flex:1 1 13rem;min-width:0}
+#mcp-list strong{font-family:ui-monospace,"DejaVu Sans Mono",monospace;overflow-wrap:anywhere}
+#mcp-list .url{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+#mcp-list .access{display:flex;flex-wrap:wrap;gap:0 var(--s-5);font-size:.9rem}
 </style>
 </head>
 <body>
-<nav>
-  <a class="brand" href="/" aria-label="Whoopy"><img src="/favicon.svg" alt=""><span>Whoopy</span></a>
-  <div class="tabs">
-    <a class="tab" href="#status" data-tab="status">Status</a>
-    <a class="tab" href="#mcp-servers" data-tab="mcp-servers">MCP Servers</a>
-    <a class="tab" href="#config" data-tab="config">Config</a>
-  </div>
-  <div class="out">
-    <a href="/ui/">LiteLLM Admin</a>
-    <a href="/docs">LiteLLM API</a>
-  </div>
+<header class="band">
+  <img class="mascot" src="/mascot.svg" alt="">
+  <h1>Whoopy</h1>
+  <a class="chip" id="chip" href="#status">checking</a>
+</header>
+<nav class="tabs" aria-label="Sections">
+  <a href="#status" data-tab="status">Status</a>
+  <a href="#mcp-servers" data-tab="mcp-servers">MCP Servers</a>
+  <a href="#config" data-tab="config">Config</a>
+  <a class="ext" href="/ui/" target="_blank" rel="noopener">LiteLLM Admin<svg class="ext-icon"
+    viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="square" stroke-linejoin="miter"><path d="M7 3H3v10h10V9"/><path d="M9 2h5v5M14 2 7 9"/></svg><span
+    class="sr">(opens in a new tab)</span></a>
+  <a class="ext" href="/docs" target="_blank" rel="noopener">LiteLLM API<svg class="ext-icon"
+    viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="square" stroke-linejoin="miter"><path d="M7 3H3v10h10V9"/><path d="M9 2h5v5M14 2 7 9"/></svg><span
+    class="sr">(opens in a new tab)</span></a>
 </nav>
-<main>
-  <section class="card" data-panel="status" aria-live="polite">
+<main class="panels">
+  <section class="panel" data-panel="status" aria-live="polite">
+    <h2>Ollama machine</h2>
     <div class="state"><span id="dot" class="dot"></span><span id="state">Checking…</span></div>
     <dl>
       <dt>Requests</dt><dd id="enabled">…</dd>
       <dt>Last wake</dt><dd id="last">…</dd>
     </dl>
-    <button id="wake" type="button">Wake</button>
-    <p id="message"></p>
+    <button id="wake" class="main" type="button">Wake</button>
+    <p id="message" class="msg"></p>
   </section>
-  <section class="card" data-panel="config" id="settings" hidden>
+  <section class="panel" data-panel="mcp-servers" id="mcp" hidden>
+    <h2>MCP servers</h2>
+    <ul id="mcp-list"></ul>
+    <p id="mcp-message" class="msg" role="status"></p>
+    <p class="hint">"From the internet" is Whoopy's: without it a server answers
+      the local networks only. "Every key" is LiteLLM's: without it only the keys
+      granted the server may use it. Grants per key and tool filters are in the
+      <a href="/ui/" target="_blank" rel="noopener">admin page<svg class="ext-icon"
+      viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="square" stroke-linejoin="miter"><path d="M7 3H3v10h10V9"/><path d="M9 2h5v5M14 2 7 9"/></svg><span
+      class="sr">(opens in a new tab)</span></a> (MCP Servers, Virtual Keys). Who may use
+      /mcp/whoopy is set in the YunoHost config panel.</p>
+    <form id="mcp-add" hidden>
+      <h3>Add a server</h3>
+      <label class="row"><span>Name, served at /mcp/&lt;name&gt;</span>
+        <input type="text" name="name" required pattern="[a-z0-9_]{1,32}"
+               title="Lower-case letters, digits and _" autocomplete="off"></label>
+      <label class="row"><span>Address</span>
+        <input type="url" name="url" required placeholder="http://127.0.0.1:8770/mcp"></label>
+      <label class="row"><span>Bearer token, empty if it asks for none</span>
+        <input type="password" name="token" autocomplete="off"></label>
+      <label class="check"><input type="checkbox" name="all" checked> Every key may use it</label>
+      <button type="submit" class="main">Add</button>
+    </form>
+  </section>
+  <section class="panel" data-panel="config" id="settings" hidden>
     <h2>Wake settings</h2>
     <form id="set-form" hidden>
       <label class="check"><input type="checkbox" name="wol_enabled">
         Wake the Ollama machine when a request needs it</label>
-      <label>MAC address of its network card, the one with Wake-on-LAN on
+      <label class="row"><span>MAC address of its network card, the one with Wake-on-LAN on</span>
         <input type="text" name="wol_mac" placeholder="aa:bb:cc:dd:ee:ff" autocomplete="off"
                pattern="([0-9a-fA-F]{2}[:\-]){5}[0-9a-fA-F]{2}"></label>
-      <label>Broadcast address for the wake packet
+      <label class="row"><span>Broadcast address for the wake packet</span>
         <input type="text" name="wol_broadcast" required placeholder="255.255.255.255"></label>
-      <label>Seconds to wait for Ollama after a wake, 10 to 540
+      <label class="row"><span>Seconds to wait for Ollama after a wake, 10 to 540</span>
         <input type="number" name="wake_timeout_s" required min="10" max="540"></label>
-      <label>How long a model stays loaded after a request, e.g. 5m; empty: Ollama's own
+      <label class="row"><span>How long a model stays loaded after a request, e.g. 5m; empty: Ollama's own</span>
         <input type="text" name="keep_alive" pattern="[0-9]+[smh]" autocomplete="off"></label>
-      <button type="submit">Save</button>
+      <button type="submit" class="main">Save</button>
     </form>
-    <p id="set-message" role="status"></p>
-  </section>
-  <section class="card" data-panel="mcp-servers" id="mcp" hidden>
-    <h2>MCP servers</h2>
-    <ul id="mcp-list"></ul>
-    <p id="mcp-message" role="status"></p>
-    <p class="hint">"From the internet" is Whoopy's: without it a server answers
-      the local networks only. "Every key" is LiteLLM's: without it only the keys
-      granted the server may use it. Grants per key and tool filters are in the
-      <a href="/ui/">admin page</a> (MCP Servers, Virtual Keys). Who may use
-      /mcp/whoopy is set in the YunoHost config panel.</p>
-    <form id="mcp-add" hidden>
-      <h3>Add a server</h3>
-      <label>Name, served at /mcp/&lt;name&gt;
-        <input type="text" name="name" required pattern="[a-z0-9_]{1,32}"
-               title="Lower-case letters, digits and _" autocomplete="off"></label>
-      <label>Address
-        <input type="url" name="url" required placeholder="http://127.0.0.1:8770/mcp"></label>
-      <label>Bearer token, empty if it asks for none
-        <input type="password" name="token" autocomplete="off"></label>
-      <label class="check"><input type="checkbox" name="all" checked> Every key may use it</label>
-      <button type="submit">Add</button>
-    </form>
+    <p id="set-message" class="msg" role="status"></p>
   </section>
 </main>
 <script>
@@ -183,9 +212,16 @@ function ago(unix) {
   return new Date(unix * 1000).toLocaleString();
 }
 
+// The header's chip: a word and its colour class ("" is a resting state).
+function chip(word, cls) {
+  $("chip").textContent = word;
+  $("chip").className = `chip ${cls}`;
+}
+
 function show(st) {
   const state = st.up ? "up" : st.waking ? "waking" : "down";
   $("dot").className = `dot ${state}`;
+  chip(...{ up: ["awake", "ok"], waking: ["waking", "warn"], down: ["asleep", ""] }[state]);
   $("state").textContent = {
     up: "The Ollama machine is awake",
     waking: "The Ollama machine is waking up",
@@ -207,6 +243,7 @@ async function refresh() {
     if (r.type === "opaqueredirect") {
       $("dot").className = "dot";
       $("state").textContent = "Your portal session has expired";
+      chip("signed out", "bad");
       say("Reload the page to log in again.", true, true);
       return;
     }
@@ -216,6 +253,7 @@ async function refresh() {
   } catch (e) {
     $("dot").className = "dot";
     $("state").textContent = "The wake service does not answer";
+    chip("offline", "bad");
     say(String(e.message || e), true, true);
   }
 }
@@ -223,7 +261,7 @@ async function refresh() {
 function say(text, bad = false, fromStatus = false) {
   statusMessage = fromStatus;
   $("message").textContent = text;
-  $("message").className = bad ? "bad" : "";
+  $("message").classList.toggle("bad", bad);
 }
 
 $("wake").addEventListener("click", async () => {
@@ -259,7 +297,7 @@ function litellmToken() {
 
 function mcpSay(text, bad = false) {
   $("mcp-message").textContent = text;
-  $("mcp-message").className = bad ? "bad" : "";
+  $("mcp-message").classList.toggle("bad", bad);
 }
 
 // Resolves to the JSON answer, or throws a sentence for the user.
@@ -357,6 +395,7 @@ async function listMcp() {
     if (!s.is_config) {
       const rm = document.createElement("button");
       rm.type = "button";
+      rm.className = "danger";
       rm.textContent = "Remove";
       rm.addEventListener("click", async () => {
         if (!confirm(`Remove /mcp/${s.server_name}? Keys granted it lose the grant.`)) return;
@@ -413,7 +452,7 @@ $("mcp-add").addEventListener("submit", async (ev) => {
 // Wake settings, kept by the wake daemon and applied at once.
 function setSay(text, bad = false) {
   $("set-message").textContent = text;
-  $("set-message").className = bad ? "bad" : "";
+  $("set-message").classList.toggle("bad", bad);
 }
 
 async function loadSettings() {
@@ -455,7 +494,9 @@ function showTab() {
   const tab = location.hash.slice(1) || "status";
   const known = document.querySelector(`[data-panel="${CSS.escape(tab)}"]`) ? tab : "status";
   for (const p of document.querySelectorAll("[data-panel]")) p.hidden = p.dataset.panel !== known;
-  for (const a of document.querySelectorAll("nav a[data-tab]")) {
+  // Read by the wide layout, which shows the MCP servers beside the status.
+  document.querySelector("main").dataset.tab = known;
+  for (const a of document.querySelectorAll("nav.tabs a[data-tab]")) {
     if (a.dataset.tab === known) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
