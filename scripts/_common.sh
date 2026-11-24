@@ -11,8 +11,8 @@ whoopy_default_settings() {
     # Who may reach the MCP routes: private networks only by default. The
     # server's own public IPv6 prefix is added in the panel.
     ynh_app_setting_set_default --key=lan_ranges --value="127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7"
-    # The MCP servers reachable from the internet, with a key: none by default.
-    ynh_app_setting_set_default --key=mcp_public --value=""
+    # Who may use the package's own MCP server, /mcp/whoopy: all, granted, off.
+    ynh_app_setting_set_default --key=whoopy_mcp --value="all"
     # The tokens and secrets below are untraced: the trace prints each value,
     # in the -z checks and in set_default's own check, and YunoHost redacts
     # the operation log, not yunohost-cli.log.
@@ -177,8 +177,6 @@ whoopy_configure() {
     ynh_config_add_systemd --service="$app-wake" --template="wake.service"
     lan_allow=$(whoopy_lan_allow "$lan_ranges") \
         || ynh_die "The LAN ranges hold something that is not an address or a network: $lan_ranges"
-    mcp_public_re=$(whoopy_mcp_public_re "${mcp_public:-}") \
-        || ynh_die "The public MCP servers hold something that is not a server name: $mcp_public"
     ynh_config_add_nginx
 
     yunohost service add "$app" --description="Whoopy, the AI gateway (LiteLLM)"
@@ -202,21 +200,6 @@ if not nets:
 print(" ".join(f"allow {n};" for n in nets))' "$1" 2>/dev/null
 }
 
-# The nginx regex alternation of the MCP servers open to the internet, from a
-# space-separated list of server names: "web docs" gives "web|docs", an empty
-# list a regex that matches nothing. Fails on anything else: the result lands
-# in nginx's config. "sse", "proxy" and "enabled" are refused: they are
-# LiteLLM's own routes under /mcp, not servers, and /mcp/sse and /mcp/proxy
-# pick their servers from a header or the key's grants, like the bare /mcp.
-whoopy_mcp_public_re() {
-    python3 -I -c '
-import re, sys
-names = sys.argv[1].split()
-if any(not re.fullmatch(r"[A-Za-z0-9_-]+", n) or n.lower() in ("sse", "proxy", "enabled") for n in names):
-    sys.exit(1)
-print("|".join(names) or "(?!)")' "$1" 2>/dev/null
-}
-
 # The tile gets the package's logo only while it has none, so a logo chosen
 # in the webadmin survives upgrades. The portal reads PNG only.
 whoopy_set_logo() {
@@ -236,6 +219,10 @@ whoopy_start() {
     timeout 5 "$install_dir/bin/whoopy" --socket "/run/$app/wake.sock" status >/dev/null \
         || ynh_die "The wake daemon did not start: systemctl status $app-wake"
     # An older binary starts fine but serves no page: / would answer 502.
+    # Older than 0.4.0, nginx's check of the open MCP servers answers 404, and
+    # every outside MCP call would fail with a 500.
+    [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:$port_web/whoopy/mcp-public/check")" = 403 ] \
+        || ynh_die "The wake daemon is older than this package: systemctl status $app-wake"
     curl -fsS -o /dev/null --max-time 5 "http://127.0.0.1:$port_web/whoopy/status" \
         || ynh_die "The status page did not start: systemctl status $app-wake"
     # The first start replays every database migration: allow for it.

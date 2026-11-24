@@ -54,6 +54,34 @@ if [ "$rebuild" = 1 ]; then
 fi
 whoopy_install_binary
 
+# The open MCP servers moved from the panel to the status page in 0.4.0~ynh1:
+# merged into the daemon's file while it is stopped, then dropped. A name the
+# daemon would refuse is left out, or the daemon would not start.
+if [ -n "${mcp_public:-}" ]; then
+    mkdir -p "/var/lib/$app"
+    python3 -I - "/var/lib/$app/settings.json" "$mcp_public" <<'EOF'
+import json, re, sys
+path, names = sys.argv[1], set()
+for n in sys.argv[2].split():
+    if re.fullmatch(r"[A-Za-z0-9_-]{1,64}", n) and n.lower() not in ("sse", "proxy", "enabled"):
+        names.add(n)
+    else:
+        print(f"Not carried over to the status page: {n}", file=sys.stderr)
+try:
+    with open(path) as f:
+        s = json.load(f)
+except FileNotFoundError:
+    s = {}
+s["mcp_public"] = sorted(set(s.get("mcp_public", [])) | names)
+with open(path, "w") as f:
+    f.write(json.dumps(s, indent=2) + "\n")
+EOF
+    chown -R "$app:$app" "/var/lib/$app"
+    chmod 700 "/var/lib/$app"
+    chmod 600 "/var/lib/$app/settings.json"
+fi
+ynh_app_setting_delete --key=mcp_public
+
 ynh_script_progression "Updating configuration files..."
 whoopy_configure
 whoopy_set_logo

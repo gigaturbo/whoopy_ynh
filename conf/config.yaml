@@ -20,20 +20,22 @@ model_list:
     model_info:
       mode: "embedding"
 
+{%- if whoopy_mcp != "off" %}
 mcp_servers:
   # Wake, status and model list of the Ollama machine, from whoopy-wake on
-  # loopback, at /mcp/whoopy. A chat request wakes the machine anyway, so
-  # every key may use it.
+  # loopback, at /mcp/whoopy. Who may use it is the panel's choice: every key
+  # by default, since a chat request wakes the machine anyway.
   whoopy:
     url: "http://127.0.0.1:{{ port_mcp }}/mcp"
     transport: "http"
     description: "Wake the Ollama machine, see its state and its models"
     auth_type: "bearer_token"
     authentication_token: os.environ/WHOOPY_MCP_TOKEN
-    allow_all_keys: true
+    allow_all_keys: {{ "true" if whoopy_mcp == "all" else "false" }}
     # LiteLLM gives an MCP call 60 s by default; a wake may take up to the
     # page's longest timeout, 540 s.
     timeout: 550
+{%- endif %}
 
 litellm_settings:
   # whoopy_wake.py, beside this file.

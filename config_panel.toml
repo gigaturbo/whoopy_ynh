@@ -32,11 +32,13 @@ name = "Whoopy"
         help = "Addresses or networks separated by spaces. Requests to /mcp and the other MCP routes from anywhere else get a 403. Add this server's public IPv6 prefix so home devices using it are let in; the LLM API stays open to any token."
         bind = "settings"
 
-        [main.access.mcp_public]
-        ask = "MCP servers reachable from the internet"
-        type = "string"
-        optional = true
-        help = "Server names separated by spaces, e.g. web docs. Each is reached at /mcp/<name> from anywhere, with a key granted that server. Every other server, the bare /mcp and the management routes stay on the LAN ranges. Empty keeps them all local."
+        [main.access.whoopy_mcp]
+        ask = "Who may use the package's MCP server, /mcp/whoopy"
+        type = "select"
+        choices.all = "Every key"
+        choices.granted = "Only keys granted it (LiteLLM's admin page, Virtual Keys)"
+        choices.off = "Nobody: the server is not published"
+        help = "Its tools wake the Ollama machine and show its state and models. Whether it answers from the internet is set on the status page, MCP Servers tab, like any other server."
         bind = "settings"
 
         [main.access.ui_password]
