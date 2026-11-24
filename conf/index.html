@@ -61,6 +61,7 @@
   #mcp-list .what { flex: 1; min-width: 0; }
   #mcp-list .url, .hint { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
   #mcp-list button { padding: .35rem .8rem; background: var(--bad); }
+  #mcp-list .access { display: flex; gap: 1rem; margin-top: .35rem; font-size: .9rem; }
   form { display: grid; gap: .75rem; }
   form[hidden] { display: none; }
   label { display: grid; gap: .25rem; color: var(--muted); }
@@ -125,8 +126,11 @@
       <label class="check"><input type="checkbox" name="all" checked> Every key may use it</label>
       <button type="submit">Add</button>
     </form>
-    <p class="hint">Grants per key and tool filters are in the
-      <a href="/ui/">admin page</a> (MCP Servers, Virtual Keys).</p>
+    <p class="hint">"From the internet" is Whoopy's: without it a server answers
+      the local networks only. "Every key" is LiteLLM's: without it only the keys
+      granted the server may use it. Grants per key and tool filters are in the
+      <a href="/ui/">admin page</a> (MCP Servers, Virtual Keys). Who may use
+      /mcp/whoopy is set in the YunoHost config panel.</p>
     <p id="mcp-message"></p>
   </section>
 </main>
@@ -244,10 +248,48 @@ async function litellm(method, path, body) {
   return out;
 }
 
+// A checkbox that sends its new state, and puts it back if that fails.
+function toggle(label, checked, send) {
+  const box = document.createElement("label");
+  box.className = "check";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = checked;
+  input.addEventListener("change", async () => {
+    input.disabled = true;
+    try {
+      await send(input.checked);
+      mcpSay("Saved.");
+    } catch (e) {
+      input.checked = !input.checked;
+      mcpSay(e.message || String(e), true);
+    }
+    input.disabled = false;
+  });
+  box.append(input, label);
+  return box;
+}
+
+// The "From the internet" box: the wake daemon keeps the list nginx checks.
+function openToggle(name, checked) {
+  return toggle("From the internet", checked, async (on) => {
+    const r = await fetch("/whoopy/mcp-public", {
+      method: "POST", redirect: "manual",
+      headers: { "X-Whoopy": "1", "Content-Type": "application/json" },
+      body: JSON.stringify({ name, public: on }),
+    });
+    if (r.type === "opaqueredirect") throw new Error("Your portal session has expired, reload the page.");
+    if (!r.ok) throw new Error(await r.text() || `The wake service answered ${r.status}.`);
+  });
+}
+
 async function listMcp() {
-  let servers;
+  let servers, open;
   try {
     servers = await litellm("GET", "/v1/mcp/server");
+    const r = await fetch("/whoopy/settings", { cache: "no-store", redirect: "manual" });
+    if (!r.ok) throw new Error("The wake service did not give the open servers, reload the page.");
+    open = (await r.json()).mcp_public || [];
   } catch (e) {
     $("mcp-list").replaceChildren();
     $("mcp-add").hidden = true;
@@ -260,12 +302,20 @@ async function listMcp() {
     const what = document.createElement("div");
     what.className = "what";
     const name = document.createElement("strong");
-    name.textContent = `/mcp/${s.alias || s.server_name}`;
+    const path = s.alias || s.server_name;
+    name.textContent = `/mcp/${path}`;
     const url = document.createElement("div");
     url.className = "url";
-    url.textContent = `${s.url || s.command || ""} · ${s.allow_all_keys ? "every key" : "granted keys"}`
-      + (s.is_config ? " · from the package" : "");
-    what.append(name, url);
+    url.textContent = `${s.url || s.command || ""}`
+      + (s.is_config ? ` · from the package, ${s.allow_all_keys ? "every key" : "granted keys"} (config panel)` : "");
+    const access = document.createElement("div");
+    access.className = "access";
+    access.append(openToggle(path, open.includes(path)));
+    if (!s.is_config) {
+      access.append(toggle("Every key", !!s.allow_all_keys, (on) =>
+        litellm("PUT", "/v1/mcp/server", { server_id: s.server_id, allow_all_keys: on })));
+    }
+    what.append(name, url, access);
     li.append(what);
     if (!s.is_config) {
       const rm = document.createElement("button");
@@ -283,6 +333,25 @@ async function listMcp() {
     }
     return li;
   }));
+  // Names still open with no server behind them (removed, or /mcp/whoopy
+  // turned off in the panel): listed so they can be closed.
+  const paths = servers.map((s) => s.alias || s.server_name);
+  for (const n of open.filter((n) => !paths.includes(n))) {
+    const li = document.createElement("li");
+    const what = document.createElement("div");
+    what.className = "what";
+    const name = document.createElement("strong");
+    name.textContent = `/mcp/${n}`;
+    const url = document.createElement("div");
+    url.className = "url";
+    url.textContent = "no such server, still open from the internet";
+    const access = document.createElement("div");
+    access.className = "access";
+    access.append(openToggle(n, true));
+    what.append(name, url, access);
+    li.append(what);
+    $("mcp-list").append(li);
+  }
 }
 
 $("mcp-add").addEventListener("submit", async (ev) => {
