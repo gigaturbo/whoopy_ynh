@@ -1,9 +1,12 @@
-//! The wake settings: changed on the status page, applied at once, kept in a
-//! JSON file the daemon owns (WHOOPY_SETTINGS, in its StateDirectory).
+//! The page's settings: changed on the status page, applied at once, kept in
+//! a JSON file the daemon owns (WHOOPY_SETTINGS, in its StateDirectory).
 //!
-//! Not in the YunoHost panel: they only tune the wake. What guards Whoopy
-//! (outbound access, LAN ranges, passwords) stays there, root-only, since
-//! this file is writable by the user LiteLLM runs as too.
+//! Not in the YunoHost panel: they only tune the wake, plus the MCP servers
+//! open to the internet. What guards Whoopy (outbound access, LAN ranges,
+//! passwords) stays there, root-only, since this file is writable by the user
+//! LiteLLM runs as too. The open servers are the one exception (F-M-15): that
+//! gate never confined LiteLLM, which answers every outside /v1 call and holds
+//! every server's token already.
 
 use std::{
     io::{self, Write},
@@ -32,6 +35,9 @@ pub struct Settings {
     /// How long Ollama keeps a model loaded after a request through Whoopy,
     /// e.g. `5m`; empty leaves Ollama's own setting. Read by the hook.
     pub keep_alive: String,
+    /// The MCP servers nginx lets through from anywhere, a key still needed.
+    /// Changed one at a time with `toggle_public`, never by a full save.
+    pub mcp_public: Vec<String>,
 }
 
 impl Default for Settings {
@@ -42,6 +48,7 @@ impl Default for Settings {
             wol_broadcast: Ipv4Addr::BROADCAST,
             wake_timeout_s: 90,
             keep_alive: String::new(),
+            mcp_public: Vec::new(),
         }
     }
 }
@@ -68,7 +75,22 @@ impl Settings {
                     .into(),
             );
         }
+        if let Some(bad) = self.mcp_public.iter().find(|n| !server_name_ok(n)) {
+            return Err(format!(
+                "\"{bad}\" cannot be opened: a server name is up to 64 letters, digits, _ or -, and not sse, proxy or enabled."
+            ));
+        }
         Ok(())
+    }
+
+    /// Opens or closes one MCP server to the internet; the list stays sorted
+    /// and without duplicates.
+    pub fn toggle_public(&mut self, name: &str, public: bool) {
+        self.mcp_public.retain(|n| n != name);
+        if public {
+            self.mcp_public.push(name.to_owned());
+            self.mcp_public.sort();
+        }
     }
 
     /// The saved settings, or the defaults when none were ever saved.
@@ -97,6 +119,16 @@ impl Settings {
     }
 }
 
+/// What nginx's public location matches, minus LiteLLM's own routes under
+/// /mcp: /mcp/sse and /mcp/proxy pick their servers from a header or the
+/// key's grants, so opening them would open every server.
+fn server_name_ok(n: &str) -> bool {
+    (1..=64).contains(&n.len())
+        && n.bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+        && !["sse", "proxy", "enabled"].contains(&n.to_ascii_lowercase().as_str())
+}
+
 /// Empty, or digits then s, m or h: what Ollama's keep_alive takes, minus
 /// the negative and bare-number forms nobody needs here.
 fn keep_alive_ok(s: &str) -> bool {
@@ -118,6 +150,7 @@ mod tests {
             wol_broadcast: Ipv4Addr::new(192, 168, 1, 255),
             wake_timeout_s: 120,
             keep_alive: "5m".into(),
+            mcp_public: vec!["docs".into(), "web".into()],
         }
     }
 
@@ -158,7 +191,24 @@ mod tests {
                 keep_alive: "5d".into(),
                 ..valid()
             },
-        ];
+        ]
+        .into_iter()
+        .chain(
+            [
+                "",
+                "sse",
+                "Proxy",
+                "enabled",
+                "web,docs",
+                "a/b",
+                "a;}",
+                &"a".repeat(65),
+            ]
+            .map(|n| Settings {
+                mcp_public: vec![n.into()],
+                ..valid()
+            }),
+        );
         for s in bad {
             assert!(s.check().is_err(), "{s:?}");
         }
@@ -171,6 +221,17 @@ mod tests {
             .check(),
             Ok(())
         );
+    }
+
+    #[test]
+    fn toggle() {
+        let mut s = valid();
+        s.toggle_public("abc", true);
+        s.toggle_public("web", true);
+        assert_eq!(s.mcp_public, ["abc", "docs", "web"]);
+        s.toggle_public("docs", false);
+        s.toggle_public("nope", false);
+        assert_eq!(s.mcp_public, ["abc", "web"]);
     }
 
     #[test]

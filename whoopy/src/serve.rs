@@ -13,7 +13,12 @@
 //!   GET  /whoopy/status    as the socket's /status
 //!   POST /whoopy/wake      as the socket's /wake; needs the header X-Whoopy: 1
 //!   GET  /whoopy/settings  as the socket's /settings
-//!   POST /whoopy/settings  checks, saves and applies them; needs X-Whoopy: 1
+//!   POST /whoopy/settings  checks, saves and applies them, the open MCP
+//!                          servers excepted; needs X-Whoopy: 1
+//!   POST /whoopy/mcp-public  opens or closes one MCP server to the internet,
+//!                          `{"name", "public"}`; needs X-Whoopy: 1
+//!   GET  /whoopy/mcp-public/check  nginx's auth subrequest: 204 when the
+//!                          server in the header X-Whoopy-Mcp is open, else 403
 
 use std::{
     future::IntoFuture,
@@ -136,6 +141,11 @@ pub async fn run(
                     get(settings)
                         .merge(post(save_settings).layer(middleware::from_fn(require_page_header))),
                 )
+                .route(
+                    "/whoopy/mcp-public",
+                    post(set_public).layer(middleware::from_fn(require_page_header)),
+                )
+                .route("/whoopy/mcp-public/check", get(check_public))
                 .layer(Extension(file))
                 .with_state(Arc::clone(&waker));
             started += &format!(", page at http://127.0.0.1:{port}/");
@@ -264,10 +274,51 @@ async fn save_settings(
         Ok(body) => body,
         Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
     };
+    // The Config tab sends no list: its Save must not close every server.
+    let new = Settings {
+        mcp_public: w.settings().mcp_public,
+        ..new
+    };
+    apply(&w, &file, new)
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Public {
+    name: String,
+    public: bool,
+}
+
+async fn set_public(
+    State(w): State<Shared>,
+    Extension(file): Extension<Arc<Path>>,
+    body: Result<Json<Public>, JsonRejection>,
+) -> Response {
+    let Json(Public { name, public }) = match body {
+        Ok(body) => body,
+        Err(e) => return (StatusCode::BAD_REQUEST, e.body_text()).into_response(),
+    };
+    let mut new = w.settings();
+    new.toggle_public(&name, public);
+    apply(&w, &file, new)
+}
+
+/// Fails closed: no header, or a server not listed, is a 403.
+async fn check_public(State(w): State<Shared>, headers: HeaderMap) -> StatusCode {
+    let name = headers.get("x-whoopy-mcp").and_then(|v| v.to_str().ok());
+    if name.is_some_and(|n| w.settings().mcp_public.iter().any(|p| p == n)) {
+        StatusCode::NO_CONTENT
+    } else {
+        StatusCode::FORBIDDEN
+    }
+}
+
+/// Checked, saved, then applied; answers the settings now in force.
+fn apply(w: &Shared, file: &Path, new: Settings) -> Response {
     if let Err(why) = new.check() {
         return (StatusCode::BAD_REQUEST, why).into_response();
     }
-    if let Err(e) = new.save(&file) {
+    if let Err(e) = new.save(file) {
         eprintln!("whoopy: {}: {e}", file.display());
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
