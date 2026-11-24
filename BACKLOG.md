@@ -75,6 +75,54 @@ Two ways, to be chosen:
 
 ## Tests
 
+### T-P-4 · the page's wake
+
+`todo` `playtest` `reopened 2026-11-24`
+
+**Do:** with the AI server asleep, `tests/wake-playtest.sh <ssh alias> ollama/<chat model>`.
+**Pass:** status asleep, the page's wake `ok`, then status awake with the last
+wake, and asleep again after its idle time.
+**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: not run. The desktop stayed
+awake 10 min with a 2 min idle time: a desktop session in use and other
+clients loading models. Before: passed at `a292199` (wake `ok` in 11 s,
+asleep after 123 s).
+
+### T-W-1 · a request wakes the AI server
+
+`todo` `playtest` `reopened 2026-11-24`
+
+**Do:** same run as T-P-4.
+**Pass:** a chat request through the domain answers 200; froaky's events show
+one resume; it suspends again after its idle time.
+**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: not run, as T-P-4. Before:
+passed at `a292199` (chat 200 in 26 s, 1 resume, asleep after 113 s).
+
+### T-W-2 · a failed wake
+
+`todo` `playtest` `reopened 2026-11-24`
+
+**Do:** same run as T-P-4.
+**Pass:** with a made-up MAC and 20 s, a 503 after about 21 s, then one at
+once with "a wake failed less than 15 s ago"; the settings restored.
+**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: not run, as T-P-4. Before:
+passed at `a292199`.
+
+### T-P-5 · the status page through the portal
+
+`todo` `playtest` `reopened 2026-11-24`
+
+**Do:** through the portal as an admin: the page, a wake, a refused and a
+good Save on the Config tab, the LiteLLM links.
+**Pass:** the real state in the chip and the panel, "Awake after N s", the
+daemon's reason on a refused Save, a good one kept after a reload.
+**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1, on loopback in a browser: the
+panel titled "AI server", "The AI server is awake", chip `awake`; Wake
+disabled since it was awake; Config labels say "AI server"; a 5 s timeout
+refused with "The wake timeout is 10 to 540 seconds.", a Save of the same
+values "Saved." and kept after a reload. Only console errors: the mascot and
+font nginx serves. Logged out through the domain: 302 to the portal. Still
+to run: the portal as an admin, and a wake from asleep.
+
 ### T-M-11 · the page's MCP section
 
 `todo` `playtest` `reopened 2026-11-23`
@@ -133,7 +181,7 @@ the result is to the house rules.
 
 ## Closed
 
-- `T-P-5` done `playtest` 2026-11-24 at `7c27012` · 0.4.0~ynh2, through the portal as an admin, in the pokestyle look: the page, its mascot, font and chip work; a wake of the sleeping desktop ends "Awake after N s"; a refused Save shows the daemon's reason and a good one survives a reload with no restart; LiteLLM Admin opens `/ui/` and LiteLLM API Swagger, each in a new tab
+- `T-M-8` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: `/mcp/whoopy` 401 without a token; with the master key its 3 tools, described with "AI server", each answers (status, models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)
 - `T-M-10` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1, `web` and `docs` opened on the page (carried from the panel by the upgrade): from the off-site backup server through the domain, `/mcp/web` and `/mcp/docs` 401 without a key and list 2 and 7 tools with the master key; `/mcp/whoopy` 403 with it until its box was ticked (then 401 without a key, applied at once), 403 again once unticked; `/mcp`, `/mcp/sse`, `/mcp/proxy`, `/mcp/enabled`, `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/web/mcp`, `/mcp-rest`, `/v1/mcp/server`, `/ui/mcp/`, `/public/mcp_hub` 403, `/whoopy-mcp-public` 404; `/v1/models` 200. From the LAN over IPv4 and IPv6, every server lists its tools with a key and 401s without; `/key/list` and `/v1/mcp/server` sent to the portal
@@ -150,11 +198,7 @@ the result is to the house rules.
 - `B-P-4` closed 2026-11-21 · the token defaults and generated secrets run untraced, and so does the rotate button (0.2.0~ynh3, upgraded 2026-11-21): the new MCP token and the new master key have 0 lines in `yunohost-cli.log`; old master key 401, new 200, `/mcp/whoopy` lists its tools. 93 traced lines purged from `yunohost-cli.log`, `.1` and `.2.gz`. Salt key kept (nothing stored encrypted), search token not rotated
 - `F-P-1` done 2026-11-21 · the hook empties LiteLLM's static Ollama list, so a failed `/api/tags` lists nothing instead of `ollama/llama2` (0.2.0~ynh2); checked against the installed LiteLLM with a dead address, not yet on the server. A listing is cached 5 min, so models appear up to 5 min after a wake
 - `F-P-7` done 2026-11-21 · Whoopy's status page at `/`, served by the wake daemon: state, last wake, a Wake button (needs `X-Whoopy: 1`), tabs to `/ui/` and `/docs`, where `DOCS_URL` moved Swagger (0.2.0~ynh1, released as `whoopy-0.2.0`, upgraded 2026-11-20); T-P-5 passed
-- `T-W-1` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1, `tests/wake-playtest.sh` with `gemma4-e4b`: desktop asleep, chat 200 in 26 s, 1 resume, asleep again after 113 s (no `keep_alive` set on the page)
-- `T-W-2` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1: a made-up MAC and 20 s, a 503 after 21 s, then 0 s with "a wake failed less than 15 s ago"; the settings restored with the open servers kept
-- `T-P-4` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1: status asleep, the page's wake `ok` in 11 s, status awake with the last wake, asleep after 123 s
 - `F-P-6` done 2026-11-20 · the wake, the panel's Wake button and an MCP server (`wake`, `status`, `models` at `/mcp/whoopy`) in one Rust daemon, `whoopy-wake.service`, the hook its client (0.1.0~ynh1, released as `whoopy-0.1.0`); T-W-1, T-W-2, T-P-3, T-P-4, T-M-8 passed; `tests/wake-playtest.sh` reruns the wake tests
-- `T-M-8` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1: `/mcp/whoopy` 401 without a token, 3 tools with the master key from the LAN; a throwaway ordinary key: `whoopy_mcp` all 3 tools, granted 0, granted to the key (its `server_id` in `object_permission.mcp_servers`) 3, off 0 (the master key 0 too), all again 3; the key deleted; the daemon's loopback port 401 without its token
 - `F-P-4` done 2026-11-19 · the redrawn icon set from ynh-app-icons 0ca6205: `conf/logo.png`, the six favicons in `conf/icons/` and `doc/logo.svg` replaced, `logo_update/` deleted (~ynh13)
 - `F-P-3` done 2026-11-19 · the desktop's embedding models as `ollama-embed/<name>`, LiteLLM's `ollama` provider at Ollama's address (~ynh12, upgraded 2026-11-19): `ollama/<name>` answered 400 to an embedding; through the new route 768 dimensions in 4 s, and cheruby-docs-mcp indexed 333 files in 3 min 47 s with it
 - `F-M-8` done 2026-11-10 · the side apps are reached by an address and a password-type token pasted in the panel, never by reading their settings (~ynh9); documents are one `docs` server at `/mcp/docs` whose id stays that of `docs_<user>`, so grants carried over; Rikka Hub reached it with its ordinary key once `_<user>` was dropped from its URL; `/mcp/web` and `embeddinggemma` answer
