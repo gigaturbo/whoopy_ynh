@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1~ynh6 (2026-11-26)
+
+- [x] **FEAT** the model list shows Ollama's embedding models under `ollama-embed/` only, and its other models under `ollama/` only
+
 ## 0.4.1~ynh5 (2026-11-26)
 
 - [x] **FEAT** the status page changes an MCP server's token in place, so the keys granted it keep their grant

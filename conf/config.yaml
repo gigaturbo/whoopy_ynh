@@ -4,7 +4,7 @@
 # any other MCP server on this machine is added there, never in this file.
 
 model_list:
-  # Every model Ollama has, as ollama/<name>. The wake hook sets the status
+  # Ollama's chat models, as ollama/<name>. The wake hook sets the status
   # page's keep_alive on these two routes.
   - model_name: "ollama/*"
     litellm_params:
@@ -12,7 +12,8 @@ model_list:
       api_base: "{{ ollama_url }}"
   # The same machine's embedding models, as ollama-embed/<name>: the wildcard
   # above goes through Ollama's chat API, which LiteLLM cannot embed with.
-  # Same address, so the wake hook wakes the machine for these too.
+  # Same address, so the wake hook wakes the machine for these too. The hook
+  # lists each Ollama model under one of the two routes, by its capabilities.
   - model_name: "ollama-embed/*"
     litellm_params:
       model: "ollama/*"

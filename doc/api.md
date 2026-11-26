@@ -39,7 +39,7 @@ asleep, or out of reach (offline). `/` has three tabs and two links out:
 | Name | What |
 |---|---|
 | `ollama/<name>` | every chat model Ollama has |
-| `ollama-embed/<name>` | the same machine's embedding models |
+| `ollama-embed/<name>` | the same machine's embedding models, the ones Ollama marks as such |
 | `speaches/<id>` | Speaches' transcription and speech models, through froaky, once added as a database model (below) |
 | anything else | the models added in LiteLLM's admin page (`/ui/`, Models) |
 

@@ -9,8 +9,8 @@ the machine by Wake-on-LAN when a request arrives.
 ## Features
 
 - **An OpenAI-style API** at `/v1` (chat, completions, embeddings, models),
-  plus Anthropic-style `/v1/messages`. Every Ollama model appears as
-  `ollama/<name>`, and as `ollama-embed/<name>` for embeddings.
+  plus Anthropic-style `/v1/messages`. Ollama's chat models appear as
+  `ollama/<name>`, its embedding models as `ollama-embed/<name>`.
 - **Wake-on-LAN**: a request for a sleeping machine waits while it wakes.
   Requests arriving together share one wake.
 - **A status page** at `/`: is the machine awake, its last wake, a Wake

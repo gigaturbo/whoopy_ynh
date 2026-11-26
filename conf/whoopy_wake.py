@@ -31,6 +31,9 @@ routes that carry none, read from the daemon at most every KEEP_ALIVE_TTL.
 
 It also empties LiteLLM's static Ollama model list: while the machine sleeps,
 /api/tags fails and /v1/models would list that instead ("ollama/llama2").
+And it sorts the listing of the two wildcards: an Ollama model with the
+"embedding" capability is listed under ollama-embed/ only, any other under
+ollama/ only. Calls are not filtered.
 """
 
 import logging
@@ -43,6 +46,7 @@ import litellm
 from fastapi import HTTPException
 from litellm.exceptions import ServiceUnavailableError
 from litellm.integrations.custom_logger import CustomLogger
+from litellm.proxy.auth import model_checks
 
 OLLAMA_URL = os.environ.get("WHOOPY_OLLAMA_URL", "").rstrip("/")
 AI_HOST = urlsplit(OLLAMA_URL).hostname
@@ -63,6 +67,40 @@ log = logging.getLogger("whoopy_wake")
 # The fallback LiteLLM lists when Ollama's /api/tags fails (LiteLLM 1.106.6,
 # OllamaModelInfo.get_models): a model this machine may not have.
 litellm.models_by_provider["ollama"] = []
+
+# Whether a wildcard of config.yaml lists embedding models, by the provider it
+# routes through: ollama_chat for ollama/*, ollama for ollama-embed/*.
+LISTS_EMBEDDERS = {"ollama_chat": False, "ollama": True}
+# The embedding models last seen per Ollama URL, for when /api/tags fails.
+_embedders: dict[str, frozenset[str]] = {}
+_get_provider_models = model_checks.get_provider_models
+
+
+def _provider_models(provider, litellm_params=None):
+    """LiteLLM's wildcard expansion, each Ollama model under one route only.
+
+    Replaces model_checks.get_provider_models (LiteLLM 1.106.6), which
+    get_known_models_from_wildcard looks up at each call. LiteLLM's own list
+    holds names, without the capabilities: those come from /api/tags here."""
+    models = _get_provider_models(provider, litellm_params)
+    lists_embedders = LISTS_EMBEDDERS.get(provider)
+    base = (getattr(litellm_params, "api_base", None) or "").rstrip("/")
+    if not models or lists_embedders is None or not AI_HOST or urlsplit(base).hostname != AI_HOST:
+        return models
+    try:
+        tags = httpx.get(f"{base}/api/tags", timeout=5).json()["models"]
+        _embedders[base] = frozenset(
+            f"ollama/{m['name']}" for m in tags if "embedding" in (m.get("capabilities") or ())
+        )
+    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        pass
+    embedders = _embedders.get(base)
+    if embedders is None:
+        return models
+    return [m for m in models if (m in embedders) == lists_embedders]
+
+
+model_checks.get_provider_models = _provider_models
 
 
 class WakeOnLan(CustomLogger):
