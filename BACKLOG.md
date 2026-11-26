@@ -24,18 +24,6 @@ Both units allow `localhost`, which opens every loopback TCP port, not only Post
 
 ## Features
 
-### F-W-1 · wake the AI server for any model on it
-
-`wip` `small` `filed 2026-11-26`
-
-cheruby-docs transcribes on the desktop through Whoopy as `speaches/<id>`, a
-database model on froaky's `/api/speaches/v1` (froaky's F-V-2), with
-froaky's model token. The hook woke only for Ollama's exact `api_base`, so a
-request to that model while the desktop slept failed without a wake.
-
-**Done:** the hook wakes for any deployment on the AI server's host.
-**Left:** upgrade, add the `speaches/*` model, a transcription from asleep.
-
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
 
 `todo` `large` `filed 2026-11-06`
@@ -195,6 +183,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `F-W-1` done 2026-11-26 · the hook wakes the AI server for any model on its host, not only Ollama's; the `speaches/*` database model on froaky's model routes transcribed through the domain (200, segments and language), the test from asleep is T-W-1
 - `T-P-4` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 133 s
 - `T-M-8` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: `/mcp/whoopy` 401 without a token; with the master key its 3 tools, described with "AI server", each answers (status, models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
