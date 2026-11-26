@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.1~ynh3 (2026-11-26)
+## 0.4.1~ynh4 (2026-11-26)
 
 - [x] **FIX** LiteLLM reaches only the services on this machine it needs; the panel lists the ports of the MCP servers and models added here
 

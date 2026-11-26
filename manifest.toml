@@ -7,7 +7,7 @@ name = "Whoopy"
 description.en = "One authenticated AI endpoint in front of an AI server that sleeps, woken on demand"
 description.fr = "Un point d'accès IA authentifié devant un serveur IA qui dort, réveillé à la demande"
 
-version = "0.4.1~ynh3"
+version = "0.4.1~ynh4"
 
 maintainers = ["gigaturbo"]
 
@@ -89,6 +89,8 @@ ram.runtime = "1G"
     mcp.default = 8790
     # The status page, on loopback, proxied by nginx at / and /whoopy/.
     web.default = 8791
+    # Prisma's query engine, LiteLLM's link to PostgreSQL, on loopback.
+    engine.default = 8792
 
     # Prisma, LiteLLM's database layer, runs its command-line tool on Node.
     # 5.17 predates Node 24.

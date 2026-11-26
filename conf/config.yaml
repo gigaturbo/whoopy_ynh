@@ -38,8 +38,9 @@ mcp_servers:
 {%- endif %}
 
 litellm_settings:
-  # whoopy_wake.py, beside this file.
-  callbacks: ["whoopy_wake.handler"]
+  # Beside this file. whoopy_prisma pins the database engine's port, and must
+  # load before LiteLLM starts that engine.
+  callbacks: ["whoopy_prisma.pin", "whoopy_wake.handler"]
   drop_params: true
   # /v1/models asks Ollama's /api/tags for the wildcard above. That loads no
   # model; while the machine sleeps it fails fast and lists nothing.

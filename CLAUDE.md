@@ -18,6 +18,8 @@ upgrading this app touches a running service and a database, so ask first.
 - `conf/app.env`: secrets and wake settings, rendered root 600 as
   `whoopy.env`.
 - `conf/whoopy_wake.py`: the hook LiteLLM loads; asks the wake daemon.
+- `conf/whoopy_prisma.py`: loaded the same way; puts Prisma's query engine
+  on a fixed port the loopback table allows.
 - `whoopy/`: the wake daemon and its CLI, in Rust. `conf/wake.service`
   and `conf/wake.env` (root 600, wake settings and MCP token only) run it.
 - `conf/index.html`: the status page at `/`, served by the wake daemon.
@@ -58,7 +60,7 @@ Before committing:
 
 ```bash
 for f in scripts/*; do bash -n "$f"; done
-python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' conf/whoopy_wake.py
+for f in conf/whoopy_*.py; do python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "$f"; done
 (cd whoopy && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo audit)
 ```
 

@@ -150,7 +150,7 @@ whoopy_configure() {
     # root-owned: the app user must not be able to change code it runs.
     mkdir -p "$install_dir/config"
     ynh_config_add --jinja --template="config.yaml" --destination="$install_dir/config/config.yaml"
-    install -m 644 "$YNH_APP_BASEDIR/conf/whoopy_wake.py" "$install_dir/config/whoopy_wake.py"
+    install -m 644 "$YNH_APP_BASEDIR/conf/whoopy_wake.py" "$YNH_APP_BASEDIR/conf/whoopy_prisma.py" "$install_dir/config/"
 
     # The browser icons, and the full badge LiteLLM shows as its logo.
     mkdir -p "$install_dir/icons"
@@ -225,7 +225,7 @@ whoopy_ports_valid() {
 whoopy_firewall() {
     local uid ports p baseline=1 file="/etc/nftables.d/$app.conf"
     uid=$(id -u "$app")
-    ports="5432, $port_mcp"
+    ports="5432, $port_engine, $port_mcp"
     for p in $loopback_ports; do ports+=", $p"; done
     [ -e "$file" ] && mv "$file" "$file.previous"
     nft -c -f /etc/nftables.conf > /dev/null 2>&1 || baseline=0
