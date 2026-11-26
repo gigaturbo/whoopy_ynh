@@ -7,7 +7,7 @@ name = "Whoopy"
 description.en = "One authenticated AI endpoint in front of an AI server that sleeps, woken on demand"
 description.fr = "Un point d'accès IA authentifié devant un serveur IA qui dort, réveillé à la demande"
 
-version = "0.4.1~ynh4"
+version = "0.4.1~ynh5"
 
 maintainers = ["gigaturbo"]
 

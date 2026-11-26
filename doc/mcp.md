@@ -68,6 +68,9 @@ first. Both work from the LAN ranges only.
   encrypted in its database.
 - **Who:** every key, or only the keys it is granted to (per key in the
   admin page, the key's MCP servers). Changed later with its "Every key" box.
+- **A new token** (the app rotated it) goes in with the server's Token
+  button. The server stays the same, so the keys granted it keep their grant;
+  removing and re-adding it would lose them.
 
 It is then served at `/mcp/<name>`, its tools named `<server>-<tool>`. A
 server that runs on the AI server does not wake it: only `/mcp/whoopy`
@@ -83,7 +86,9 @@ curl https://<domain>/v1/mcp/server -H "Authorization: Bearer <master key>" \
 where `server.json` holds `server_name`, `url`, `"transport": "http"`,
 `"auth_type": "bearer_token"`, `"credentials": {"auth_value": "<token>"}` and
 `allow_all_keys`. A `server_id` given there is kept: keys granted a server
-keep their grant when it is re-created with the same id.
+keep their grant when it is re-created with the same id. A new token needs no
+re-creation: `PUT` on the same route, with only `server_id`,
+`"auth_type": "bearer_token"` and `credentials`.
 
 Database servers travel in Whoopy's backup with the rest of the database.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1~ynh5 (2026-11-26)
+
+- [x] **FEAT** the status page changes an MCP server's token in place, so the keys granted it keep their grant
+
 ## 0.4.1~ynh4 (2026-11-26)
 
 - [x] **FIX** LiteLLM reaches only the services on this machine it needs; the panel lists the ports of the MCP servers and models added here

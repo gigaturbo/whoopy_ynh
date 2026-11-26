@@ -121,6 +121,8 @@ input[type=checkbox]{width:1.25rem;height:1.25rem;min-height:0;margin:0;flex:non
 #mcp-list strong{font-family:ui-monospace,"DejaVu Sans Mono",monospace;overflow-wrap:anywhere}
 #mcp-list .url{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
 #mcp-list .access{display:flex;flex-wrap:wrap;gap:0 var(--s-5);font-size:.9rem}
+#mcp-list form.token{flex:1 1 100%}
+#mcp-list .actions{display:flex;flex-wrap:wrap;gap:var(--s-3)}
 </style>
 </head>
 <body>
@@ -393,6 +395,42 @@ async function listMcp() {
     what.append(name, url, access);
     li.append(what);
     if (!s.is_config) {
+      // A new token in place: the server keeps its id, so keys keep their grant.
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.textContent = "Token";
+      edit.setAttribute("aria-expanded", "false");
+      const form = document.createElement("form");
+      form.className = "token";
+      form.hidden = true;
+      form.innerHTML = `<label class="row"><span></span>
+        <input type="password" name="token" required autocomplete="off"></label>
+        <div class="actions"><button type="submit" class="main">Save</button>
+        <button type="button" name="cancel">Cancel</button></div>`;
+      form.querySelector("span").textContent = `New Bearer token for /mcp/${path}`;
+      const close = () => {
+        form.reset();
+        form.hidden = true;
+        edit.setAttribute("aria-expanded", "false");
+      };
+      edit.addEventListener("click", () => {
+        if (!form.hidden) return close();
+        form.hidden = false;
+        edit.setAttribute("aria-expanded", "true");
+        form.elements.token.focus();
+      });
+      form.elements.cancel.addEventListener("click", close);
+      form.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        try {
+          await litellm("PUT", "/v1/mcp/server", {
+            server_id: s.server_id, auth_type: "bearer_token",
+            credentials: { auth_value: form.elements.token.value },
+          });
+          close();
+          mcpSay(`Token changed for /mcp/${path}.`);
+        } catch (e) { mcpSay(e.message, true); }
+      });
       const rm = document.createElement("button");
       rm.type = "button";
       rm.className = "danger";
@@ -405,7 +443,10 @@ async function listMcp() {
         } catch (e) { mcpSay(e.message, true); }
         listMcp();
       });
-      li.append(rm);
+      const buttons = document.createElement("div");
+      buttons.className = "actions";
+      buttons.append(edit, rm);
+      li.append(buttons, form);
     }
     return li;
   }));
