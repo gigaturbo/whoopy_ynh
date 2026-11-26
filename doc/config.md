@@ -52,6 +52,7 @@ sudo yunohost app config set whoopy main.access.lan_ranges -v "<ranges>"
 | Key | Default | Effect |
 |---|---|---|
 | `main.access.outbound` | `lan` | `lan`: LiteLLM reaches local networks only. `any`: anywhere, needed for cloud providers. |
+| `main.access.loopback_ports` | empty | ports on this machine LiteLLM may reach, separated by spaces: one for each MCP server or model added at `http://127.0.0.1:<port>`. The database, DNS and `/mcp/whoopy` are always allowed; any other local port is refused. |
 | `main.access.lan_ranges` | the private networks | who may reach the [MCP routes](mcp.md); anyone else gets a 403 |
 | `main.access.whoopy_mcp` | `all` | who may use the package's MCP server, `/mcp/whoopy`: `all` every key, `granted` the keys granted it in LiteLLM's admin page, `off` not published |
 | `main.access.ui_password` | kept | a new admin password for LiteLLM's page; empty keeps it |

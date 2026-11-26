@@ -26,6 +26,13 @@ name = "Whoopy"
         help = "Local networks only means a compromised release cannot send anything to the internet. Cloud models (OpenAI, Anthropic...) need Anywhere."
         bind = "settings"
 
+        [main.access.loopback_ports]
+        ask = "Ports on this machine LiteLLM may reach"
+        type = "string"
+        optional = true
+        help = "Port numbers separated by spaces: one for each MCP server or model added at http://127.0.0.1:<port>. The database, DNS and /mcp/whoopy are always allowed; any other port on this machine is refused."
+        bind = "settings"
+
         [main.access.lan_ranges]
         ask = "Networks that may reach the MCP tools"
         type = "string"

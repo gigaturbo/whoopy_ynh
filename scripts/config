@@ -13,6 +13,12 @@ validate__lan_ranges() {
         || echo "Addresses or networks separated by spaces, e.g. 192.168.0.0/16 fd00::/8."
 }
 
+# The list lands in the nftables table: one TCP port per entry.
+validate__loopback_ports() {
+    whoopy_ports_valid "${loopback_ports:-}" \
+        || echo "Port numbers separated by spaces, e.g. 8770 8772."
+}
+
 # Turning the shared login off with no personal admin account would lock
 # everyone out of the admin page.
 validate__env_login() {
@@ -49,6 +55,7 @@ ynh_app_config_apply() {
     ollama_url=$(ynh_app_setting_get --key=ollama_url)
     outbound=$(ynh_app_setting_get --key=outbound)
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
+    loopback_ports=$(ynh_app_setting_get --key=loopback_ports)
     whoopy_mcp=$(ynh_app_setting_get --key=whoopy_mcp)
     env_login=$(ynh_app_setting_get --key=env_login)
     set +o xtrace
@@ -69,6 +76,7 @@ run__new_master_key() {
     # them from the settings.
     outbound=$(ynh_app_setting_get --key=outbound)
     lan_ranges=$(ynh_app_setting_get --key=lan_ranges)
+    loopback_ports=$(ynh_app_setting_get --key=loopback_ports)
     whoopy_mcp=$(ynh_app_setting_get --key=whoopy_mcp)
     set +o xtrace
     ui_password=$(ynh_app_setting_get --key=ui_password)

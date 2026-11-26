@@ -61,6 +61,9 @@ package. The status page acts with your admin page session: sign in to `/ui/`
 first. Both work from the LAN ranges only.
 
 - **Address:** its Streamable HTTP URL, e.g. `http://127.0.0.1:<port>/mcp`.
+  A port on this machine must first be added to the config panel's
+  loopback ports, or LiteLLM cannot reach it. The same goes for a model
+  served on this machine.
 - **Authentication:** Bearer token, the one that app gives. LiteLLM stores it
   encrypted in its database.
 - **Who:** every key, or only the keys it is granted to (per key in the

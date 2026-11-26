@@ -13,6 +13,9 @@ whoopy_default_settings() {
     ynh_app_setting_set_default --key=lan_ranges --value="127.0.0.0/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7"
     # Who may use the package's own MCP server, /mcp/whoopy: all, granted, off.
     ynh_app_setting_set_default --key=whoopy_mcp --value="all"
+    # Loopback ports LiteLLM may reach beyond its own needs: the MCP servers
+    # and models added on this machine.
+    ynh_app_setting_set_default --key=loopback_ports --value=""
     # The tokens and secrets below are untraced: the trace prints each value,
     # in the -z checks and in set_default's own check, and YunoHost redacts
     # the operation log, not yunohost-cli.log.
@@ -117,7 +120,7 @@ whoopy_check_downloads() {
 }
 
 # Settings that change from the config panel: secrets, LiteLLM's config,
-# the unit (outbound rule) and nginx.
+# the unit (outbound rule), nginx and the loopback table.
 whoopy_configure() {
     # The trace would print the password, quoted in a way Yunohost's log
     # redaction does not recognise. systemd reads whoopy.env with escapes, so the
@@ -178,6 +181,9 @@ whoopy_configure() {
     lan_allow=$(whoopy_lan_allow "$lan_ranges") \
         || ynh_die "The LAN ranges hold something that is not an address or a network: $lan_ranges"
     ynh_config_add_nginx
+    whoopy_ports_valid "$loopback_ports" \
+        || ynh_die "The loopback ports hold something that is not a port: $loopback_ports"
+    whoopy_firewall
 
     yunohost service add "$app" --description="Whoopy, the AI gateway (LiteLLM)"
     yunohost service add "$app-wake" --description="Whoopy, wakes the AI server"
@@ -198,6 +204,43 @@ nets = [ipaddress.ip_network(r, strict=False) for r in raw]
 if not nets:
     sys.exit(1)
 print(" ".join(f"allow {n};" for n in nets))' "$1" 2>/dev/null
+}
+
+# A space-separated list of TCP ports, possibly empty. The list lands in the
+# nftables file, so anything else is refused.
+whoopy_ports_valid() {
+    local p
+    for p in $1; do
+        [[ "$p" =~ ^[0-9]{1,5}$ ]] && (( p >= 1 && p <= 65535 )) || return 1
+    done
+}
+
+# The app's user reaches on loopback only the ports it needs (B-P-6): a table
+# in /etc/nftables.d, which every boot and firewall reload loads after its
+# flush. A file nftables cannot load would leave the host with no firewall at
+# boot, so the whole set is checked before this table is loaded alone,
+# leaving the other tables as they are. A set already broken without it is
+# the host's problem, not this table's: warned, never fatal, so an upgrade or
+# a restore does not fail on it.
+whoopy_firewall() {
+    local uid ports p baseline=1 file="/etc/nftables.d/$app.conf"
+    uid=$(id -u "$app")
+    ports="5432, $port_mcp"
+    for p in $loopback_ports; do ports+=", $p"; done
+    [ -e "$file" ] && mv "$file" "$file.previous"
+    nft -c -f /etc/nftables.conf > /dev/null 2>&1 || baseline=0
+    ynh_config_add --template="nftables.conf" --destination="$file"
+    if [ "$baseline" = 1 ] && ! nft -c -f /etc/nftables.conf; then
+        ynh_safe_rm "$file"
+        [ -e "$file.previous" ] && mv "$file.previous" "$file"
+        ynh_die "nftables refuses the new $file; the previous one is kept and nothing was loaded."
+    fi
+    ynh_safe_rm "$file.previous"
+    if [ "$baseline" = 0 ]; then
+        ynh_print_warn "The host's nftables set fails to load without this app's table: check /etc/nftables.conf and /etc/nftables.d. This table is loaded alone meanwhile."
+        nft -c -f "$file" || ynh_die "nftables refuses $file."
+    fi
+    nft -f "$file"
 }
 
 # The tile gets the package's logo only while it has none, so a logo chosen

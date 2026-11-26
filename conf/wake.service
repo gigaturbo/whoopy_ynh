@@ -28,7 +28,8 @@ ExecStart=__INSTALL_DIR__/bin/whoopy serve
 MemoryMax=64M
 
 # Only Ollama on the local network and the wake broadcast: never the internet,
-# whatever LiteLLM's outbound setting.
+# whatever LiteLLM's outbound setting. On loopback, the nftables table
+# narrows this to the ports LiteLLM needs: the daemon needs none.
 IPAddressAllow=localhost link-local 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7 255.255.255.255
 IPAddressDeny=any
 

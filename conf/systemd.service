@@ -48,6 +48,7 @@ ExecStart=__INSTALL_DIR__/venv/bin/litellm --config __INSTALL_DIR__/config/confi
 MemoryMax=1536M
 
 # Outbound: "any", or only loopback and private networks (config panel).
+# On loopback, the nftables table narrows this to the ports LiteLLM needs.
 IPAddressAllow=localhost link-local multicast 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7
 IPAddressDeny=__IP_DENY__
 

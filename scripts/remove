@@ -12,6 +12,9 @@ done
 ynh_config_remove_systemd
 ynh_config_remove_systemd "$app-wake"
 ynh_config_remove_nginx
+# The loopback table: the file for the next boot, the table for now.
+ynh_safe_rm "/etc/nftables.d/$app.conf"
+nft delete table inet "$app" 2>/dev/null || true
 # The wake settings, which systemd keeps after the unit goes.
 ynh_safe_rm "/var/lib/$app"
 
