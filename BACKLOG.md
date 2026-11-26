@@ -14,13 +14,7 @@ runtime.
 
 ## Bugs
 
-### B-P-6 · LiteLLM can reach every service on loopback
-
-`open` `low` `filed 2026-11-24`
-
-Both units allow `localhost`, which opens every loopback TCP port, not only PostgreSQL and the MCP servers they need: LDAP, the YunoHost API, a Redis with no password. LiteLLM is a large Python app that reads model and tool answers.
-
-**Fix:** the per-uid nftables table in the `mcp-server-dev` skill (`references/deploy.md`, Loopback by port), first applied in cheruby-search-mcp (its B-P-1), allowing DNS, PostgreSQL and the MCP servers' ports; the list grows with each MCP server added.
+None open.
 
 ## Features
 
@@ -155,11 +149,14 @@ the result is to the house rules.
 
 ## Closed
 
+- `B-P-6` closed 2026-11-26 · LiteLLM's user reaches on loopback only DNS, PostgreSQL, Prisma's query engine (pinned to `port_engine`), `port_mcp` and the panel's `loopback_ports`, by an nftables table on its uid (0.4.1~ynh4, at `02ab67e`): as user `whoopy` 5432, 8790, 8770 and 8792 open, 389, 6379, 8384, 443 and `::1` refused in 2 ms; `docs`, `web`, `flambyno` and `whoopy` list their tools, `embeddinggemma` on 8771 embeds. 0.4.1~ynh3 without the pin crash-looped LiteLLM for about 10 minutes (Prisma's random port refused). The only refusals left are Prisma trying `::1` before 127.0.0.1
+- `T-P-1` done `playtest` 2026-11-26 at `02ab67e` · 0.4.1~ynh4 with the loopback table: through the domain `/v1/models` 401 without a token, 200 with; `/key/list` and `/v1/mcp/server` 302 to the portal even with a token. Migrations not rerun (an upgrade, not a first install)
+- `T-M-8` done `playtest` 2026-11-26 at `02ab67e` · 0.4.1~ynh4: `/mcp/whoopy` through the domain 401 without a token, no redirect; with the master key its 3 tools listed, status and models answer (the machine asleep); the daemon's loopback port 401 without its token. `whoopy-wake` not called, so as not to wake the desktop
+- `T-P-2` done 2026-11-26 at `02ab67e` · 0.4.1~ynh4: no download in the journal since start-up (the only URLs are LiteLLM's banner); the outbound rule unchanged since 2026-11-04, the pypi.org probe not rerun
 - `T-W-1` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2, from asleep each time: `tests/wake-playtest.sh <ai server> ollama/gemma4-e4b-qat-64k` chat 200 in 27 s, 1 resume, asleep after 113 s; `speaches/deepdml/faster-whisper-large-v3-turbo-ct2` transcription through the domain 200 in 16 s ("front, center."), 1 resume, asleep after about 7 min (Speaches holds its model 5 min). `speaches/Systran/faster-whisper-small` woke it too but 404: not installed on the AI server
 - `T-W-2` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2: 503 in 22 s "Ollama did not answer within 20 s", then 0 s with "a wake failed less than 15 s ago"; the settings restored with the open servers kept
 - `F-W-1` done 2026-11-26 · the hook wakes the AI server for any model on its host, not only Ollama's; the `speaches/*` database model on froaky's model routes transcribed through the domain (200, segments and language), the test from asleep is T-W-1
 - `T-P-4` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 123 s
-- `T-M-8` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2: `/mcp/whoopy` through the domain 401 without a token, no redirect; with the master key its 3 tools listed, each answers (status "Awake, no model in memory", models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)
 - `T-M-10` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1, `web` and `docs` opened on the page (carried from the panel by the upgrade): from the off-site backup server through the domain, `/mcp/web` and `/mcp/docs` 401 without a key and list 2 and 7 tools with the master key; `/mcp/whoopy` 403 with it until its box was ticked (then 401 without a key, applied at once), 403 again once unticked; `/mcp`, `/mcp/sse`, `/mcp/proxy`, `/mcp/enabled`, `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/web/mcp`, `/mcp-rest`, `/v1/mcp/server`, `/ui/mcp/`, `/public/mcp_hub` 403, `/whoopy-mcp-public` 404; `/v1/models` 200. From the LAN over IPv4 and IPv6, every server lists its tools with a key and 401s without; `/key/list` and `/v1/mcp/server` sent to the portal
@@ -190,5 +187,3 @@ the result is to the house rules.
 - `T-M-7` done `playtest` 2026-11-07 at `6b4f206` · through `/mcp/web`: 401 without a token, no portal redirect; Open WebUI with an ordinary key fetched pages; desktop asleep: listing empty without waking, a call woke it and answered in 11 s; after a restart while asleep, "Tool search not found" without waking, then fine once listed awake
 - `T-M-6` done `playtest` 2026-11-07 at ai-websearch-mcp `12c535d` · installed by `paru -Ui` (searxng-git built from the AUR); both services up; from the Pi, real results, a public page read under the block, LAN and loopback refused, 401 without the token
 - `T-M-5` done `spec` 2026-11-07 at ai-websearch-mcp `d89aa79` · `python tests/check_server.py` on the desktop: all 8 checks pass
-- `T-P-2` done 2026-11-04 at `0c91f6a` · no download in the journal at start-up; a unit with the same outbound rule could not reach pypi.org but reached loopback
-- `T-P-1` done 2026-11-04 at `0c91f6a` · first start applied 213 migrations in about 10 s; `/v1/models` 401 without a token, 200 with; `/key/list` and `/v1/mcp/server` sent to the portal even with a token
