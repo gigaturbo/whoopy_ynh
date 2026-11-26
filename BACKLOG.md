@@ -24,6 +24,18 @@ Both units allow `localhost`, which opens every loopback TCP port, not only Post
 
 ## Features
 
+### F-W-1 · wake the AI server for any model on it
+
+`wip` `small` `filed 2026-11-26`
+
+cheruby-docs transcribes on the desktop through Whoopy as `speaches/<id>`, a
+database model on froaky's `/api/speaches/v1` (froaky's F-V-2), with
+froaky's model token. The hook woke only for Ollama's exact `api_base`, so a
+request to that model while the desktop slept failed without a wake.
+
+**Done:** the hook wakes for any deployment on the AI server's host.
+**Left:** upgrade, add the `speaches/*` model, a transcription from asleep.
+
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
 
 `todo` `large` `filed 2026-11-06`
@@ -82,6 +94,32 @@ Two ways, to be chosen:
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
 ## Tests
+
+### T-W-1 · a request wakes the desktop
+
+`todo` `playtest` `reopened 2026-11-26`
+
+Reopened by F-W-1: the hook now wakes for any model on the AI server's host.
+**Do:** desktop asleep, a chat request through the domain; then the same with
+a `speaches/<id>` transcription once that model is added.
+**Pass:** 200 for both; froaky's events show one resume each; it suspends
+again after its idle time.
+**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1, with
+`ollama/gemma4-e4b-qat-64k`: chat 200 in 16 s, 1 resume, asleep after 123 s
+(no `keep_alive` set on the page).
+
+### T-W-2 · a failed wake
+
+`todo` `playtest` `reopened 2026-11-26`
+
+Reopened by F-W-1.
+**Do:** a made-up MAC and `wake_timeout_s` 20 through `/whoopy/settings`,
+then two requests.
+**Pass:** a 503 after about 21 s, the second at once with "a wake failed less
+than 15 s ago"; the settings restored.
+**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: 503 in 21 s "The AI server
+did not wake: Ollama did not answer within 20 s", then 0 s with "a wake
+failed less than 15 s ago"; the settings restored with the open servers kept.
 
 ### T-P-5 · the status page through the portal
 
@@ -158,8 +196,6 @@ the result is to the house rules.
 ## Closed
 
 - `T-P-4` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 133 s
-- `T-W-1` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1, with `ollama/gemma4-e4b-qat-64k`: chat 200 in 16 s, 1 resume, asleep after 123 s (no `keep_alive` set on the page). A first run with `ollama/gemma4-e4b`, a name gone from the desktop, woke it and got Ollama's 404
-- `T-W-2` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: a made-up MAC and 20 s, a 503 in 21 s "The AI server did not wake: Ollama did not answer within 20 s", then 0 s with "a wake failed less than 15 s ago"; the settings restored with the open servers kept
 - `T-M-8` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: `/mcp/whoopy` 401 without a token; with the master key its 3 tools, described with "AI server", each answers (status, models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)

@@ -9,12 +9,15 @@ on the status page) and the timers.
 
 From the service environment:
 
-    WHOOPY_OLLAMA_URL       scheme://host:port of Ollama, no path
+    WHOOPY_OLLAMA_URL       scheme://host:port of Ollama, no path; its host is
+                            the AI server
     WHOOPY_SOCKET           the daemon's socket (default /run/whoopy/wake.sock)
 
 Two entry points, because LiteLLM has two request paths:
 - model calls go through the router, which hands `async_pre_call_check` the
-  deployment it picked. Only a deployment whose api_base is Ollama wakes.
+  deployment it picked. Only a deployment whose api_base is on the AI
+  server's host wakes: Ollama, and any database model there, such as
+  `speaches/*` through froaky.
 - a tool call reaches `async_pre_call_hook` as call_type "call_mcp_tool",
   and wakes only for a server in WAKE_MCP_SERVERS.
 
@@ -33,6 +36,7 @@ It also empties LiteLLM's static Ollama model list: while the machine sleeps,
 import logging
 import os
 import time
+from urllib.parse import urlsplit
 
 import httpx
 import litellm
@@ -41,6 +45,7 @@ from litellm.exceptions import ServiceUnavailableError
 from litellm.integrations.custom_logger import CustomLogger
 
 OLLAMA_URL = os.environ.get("WHOOPY_OLLAMA_URL", "").rstrip("/")
+AI_HOST = urlsplit(OLLAMA_URL).hostname
 SOCKET = os.environ.get("WHOOPY_SOCKET", "/run/whoopy/wake.sock")
 # Past the daemon's longest timeout (MAX_TIMEOUT_S in its settings.rs), so its
 # own 503 and reason arrive first.
@@ -104,8 +109,7 @@ class WakeOnLan(CustomLogger):
 
     async def async_pre_call_check(self, deployment, parent_otel_span):
         params = deployment.get("litellm_params") or {}
-        api_base = (params.get("api_base") or "").rstrip("/")
-        if not OLLAMA_URL or api_base != OLLAMA_URL:
+        if not AI_HOST or urlsplit(params.get("api_base") or "").hostname != AI_HOST:
             return None
         reason = await self._not_awake()
         if reason is None:

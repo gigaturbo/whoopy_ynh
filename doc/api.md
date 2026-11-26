@@ -40,6 +40,7 @@ asleep, or out of reach (offline). `/` has three tabs and two links out:
 |---|---|
 | `ollama/<name>` | every chat model Ollama has |
 | `ollama-embed/<name>` | the same machine's embedding models |
+| `speaches/<id>` | Speaches' transcription and speech models, through froaky, once added as a database model (below) |
 | anything else | the models added in LiteLLM's admin page (`/ui/`, Models) |
 
 While the AI server sleeps, `/v1/models` lists none of its models. A
@@ -60,3 +61,22 @@ curl https://<domain>/v1/chat/completions \
 A request for a sleeping machine waits while it wakes, up to the timeout set
 on the [status page](config.md#the-status-page). Past it, the answer is a 503.
 Requests arriving together share one wake.
+
+## Speaches through froaky
+
+A database model, added once with the master key, from the server itself on
+LiteLLM's port (the app's `port` setting), or in LiteLLM's admin page
+(Models). froaky's model token (`froaky token --models` on the AI server)
+opens its model routes only.
+
+```bash
+curl http://127.0.0.1:<port>/model/new -H "Authorization: Bearer <master key>" \
+  -H "Content-Type: application/json" -d '{
+    "model_name": "speaches/*",
+    "litellm_params": {"model": "openai/*",
+      "api_base": "http://<ai server>:8970/api/speaches/v1",
+      "api_key": "<froaky model token>"},
+    "model_info": {"mode": "audio_transcription"}}'
+```
+
+Any model whose address is on the AI server's host wakes it, as Ollama's do.

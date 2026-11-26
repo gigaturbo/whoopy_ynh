@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1~ynh2 (2026-11-26)
+
+- [x] **FEAT** a request to any model on the AI server wakes it, not only Ollama's: `speaches/*` through froaky transcribes from asleep
+
 ## 0.4.1~ynh1 (2026-11-24)
 
 - [x] **FEAT** the page, the CLI and the MCP tools call the sleeping machine the AI server, since it runs more than Ollama
