@@ -83,32 +83,6 @@ Two ways, to be chosen:
 
 ## Tests
 
-### T-W-1 · a request wakes the desktop
-
-`todo` `playtest` `reopened 2026-11-26`
-
-Reopened by F-W-1: the hook now wakes for any model on the AI server's host.
-**Do:** desktop asleep, a chat request through the domain; then the same with
-a `speaches/<id>` transcription once that model is added.
-**Pass:** 200 for both; froaky's events show one resume each; it suspends
-again after its idle time.
-**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1, with
-`ollama/gemma4-e4b-qat-64k`: chat 200 in 16 s, 1 resume, asleep after 123 s
-(no `keep_alive` set on the page).
-
-### T-W-2 · a failed wake
-
-`todo` `playtest` `reopened 2026-11-26`
-
-Reopened by F-W-1.
-**Do:** a made-up MAC and `wake_timeout_s` 20 through `/whoopy/settings`,
-then two requests.
-**Pass:** a 503 after about 21 s, the second at once with "a wake failed less
-than 15 s ago"; the settings restored.
-**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1: 503 in 21 s "The AI server
-did not wake: Ollama did not answer within 20 s", then 0 s with "a wake
-failed less than 15 s ago"; the settings restored with the open servers kept.
-
 ### T-P-5 · the status page through the portal
 
 `todo` `playtest` `reopened 2026-11-24`
@@ -117,13 +91,14 @@ failed less than 15 s ago"; the settings restored with the open servers kept.
 good Save on the Config tab, the LiteLLM links.
 **Pass:** the real state in the chip and the panel, "Awake after N s", the
 daemon's reason on a refused Save, a good one kept after a reload.
-**Last:** 2026-11-24 at `4a822c9`, 0.4.1~ynh1, on loopback in a browser: the
-panel titled "AI server", "The AI server is awake", chip `awake`; Wake
-disabled since it was awake; Config labels say "AI server"; a 5 s timeout
-refused with "The wake timeout is 10 to 540 seconds.", a Save of the same
-values "Saved." and kept after a reload. Only console errors: the mascot and
-font nginx serves. Logged out through the domain: 302 to the portal. Still
-to run: the portal as an admin, and a wake from asleep.
+**Last:** 2026-11-26 at `42253e3`, 0.4.1~ynh2, on loopback in a browser,
+from asleep: chip `asleep`, "The AI server is asleep"; Wake gave "Awake after
+10 s.", chip `awake`, last wake "answered after 10 s"; a 5 s timeout refused
+with "The wake timeout is 10 to 540 seconds.", a Save of the same values
+"Saved. The next wake uses them." and 120 kept after a reload. Only console
+errors: the mascot, font and favicons nginx serves, and the refused Save's
+400. Logged out through the domain: `/`, `/whoopy/status`, `/ui/`,
+`/key/list` 302 to the portal. Still to run: the portal as an admin.
 
 ### T-M-11 · the page's MCP section
 
@@ -134,16 +109,13 @@ of `/ui/` then signed in; add a test server, use it, remove it.
 **Pass:** signed out, a sign-in message and no form; signed in, the servers
 listed, `whoopy` marked from the package; the test server answers at
 `/mcp/<name>` with a key, and is gone once removed.
-**Last:** 2026-11-24 at `a292199`, 0.4.0~ynh1, on loopback with a real sign-in:
-signed out, the sign-in message and no form; signed in, `docs` (granted
-keys), `web` (every key), both open to the internet, and `whoopy` "from the
-package, every key (config panel)" with only its internet box; `pwtest`
-added, its 3 tools listed; "Every key" unticked: `allow_all_keys` false and
-it still answered (token kept); "From the internet" ticked: in the daemon's
-list; removed while open: shown as "no such server, still open", unticked,
-gone from the list and from LiteLLM; a Config tab Save kept the list. No
-console error but `favicon.svg` (nginx's, not on loopback). Still to run:
-the portal as an admin.
+**Last:** 2026-11-26 at `42253e3`, 0.4.1~ynh2, on loopback with a real
+sign-in, listing only (no server added or removed): signed out, "Sign in to
+the admin page first" and no form; signed in, `docs`, `flambyno`, `web` open
+to the internet with Remove, `whoopy` "from the package, every key (config
+panel)" with only its internet box, the Add form shown. Only console errors:
+the assets nginx serves. Still to run: the portal as an admin, and an add
+and remove (last 2026-11-24 at `a292199`, passed).
 
 ### T-M-1 · the compact format packs to Tandoor's JSON
 
@@ -183,9 +155,11 @@ the result is to the house rules.
 
 ## Closed
 
+- `T-W-1` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2, from asleep each time: `tests/wake-playtest.sh <ai server> ollama/gemma4-e4b-qat-64k` chat 200 in 27 s, 1 resume, asleep after 113 s; `speaches/deepdml/faster-whisper-large-v3-turbo-ct2` transcription through the domain 200 in 16 s ("front, center."), 1 resume, asleep after about 7 min (Speaches holds its model 5 min). `speaches/Systran/faster-whisper-small` woke it too but 404: not installed on the AI server
+- `T-W-2` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2: 503 in 22 s "Ollama did not answer within 20 s", then 0 s with "a wake failed less than 15 s ago"; the settings restored with the open servers kept
 - `F-W-1` done 2026-11-26 · the hook wakes the AI server for any model on its host, not only Ollama's; the `speaches/*` database model on froaky's model routes transcribed through the domain (200, segments and language), the test from asleep is T-W-1
-- `T-P-4` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 133 s
-- `T-M-8` done `playtest` 2026-11-24 at `4a822c9` · 0.4.1~ynh1: `/mcp/whoopy` 401 without a token; with the master key its 3 tools, described with "AI server", each answers (status, models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
+- `T-P-4` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 123 s
+- `T-M-8` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2: `/mcp/whoopy` through the domain 401 without a token, no redirect; with the master key its 3 tools listed, each answers (status "Awake, no model in memory", models, wake in 0 s with the machine awake); the daemon's loopback port 401 without its token. The key modes not rerun: `whoopy_mcp` untouched
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)
 - `T-M-10` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1, `web` and `docs` opened on the page (carried from the panel by the upgrade): from the off-site backup server through the domain, `/mcp/web` and `/mcp/docs` 401 without a key and list 2 and 7 tools with the master key; `/mcp/whoopy` 403 with it until its box was ticked (then 401 without a key, applied at once), 403 again once unticked; `/mcp`, `/mcp/sse`, `/mcp/proxy`, `/mcp/enabled`, `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/web/mcp`, `/mcp-rest`, `/v1/mcp/server`, `/ui/mcp/`, `/public/mcp_hub` 403, `/whoopy-mcp-public` 404; `/v1/models` 200. From the LAN over IPv4 and IPv6, every server lists its tools with a key and 401s without; `/key/list` and `/v1/mcp/server` sent to the portal
