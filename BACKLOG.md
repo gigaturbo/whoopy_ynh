@@ -14,7 +14,21 @@ runtime.
 
 ## Bugs
 
-None open.
+### B-P-7 · the docs still name the Speaches route `speaches/*`
+
+`open` `small` `filed 2026-11-27`
+
+The database route to Speaches through froaky is now `froaky-speaches/*`.
+Under `speaches/*`, `/v1/models` listed Kokoro and Piper without the
+prefix: LiteLLM 1.106.6 (`get_known_models_from_wildcard`,
+`proxy/auth/model_checks.py:317`) adds it only when
+`model.startswith(prefix)` fails, a plain string test with no `/`, and
+their ids start `speaches-ai/`. A prefix must not begin any Hugging Face
+owner name.
+
+**Fix:** `doc/api.md` (the model table and the `POST /model/new` example)
+and the comment in `conf/whoopy_wake.py` name `froaky-speaches/*`. Close
+when no file names `speaches/` as the route.
 
 ## Features
 
