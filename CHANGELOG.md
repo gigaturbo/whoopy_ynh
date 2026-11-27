@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0~ynh1 (unreleased)
+## 0.5.0~ynh1 (2026-11-27)
 
 - [x] **FEAT** `whoopy mcp list`, `add` and `update` manage LiteLLM's MCP servers from the command line, the token read from stdin
 - [x] **FEAT** `whoopy settings` shows and changes the wake settings from the command line, with the page's checks
