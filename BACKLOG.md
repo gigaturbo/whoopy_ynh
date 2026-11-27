@@ -18,30 +18,6 @@ None open.
 
 ## Features
 
-### F-M-17 · manage MCP servers from the command line
-
-`doing` `small` `filed 2026-11-27`
-
-`whoopy mcp list`, `add` and `update`, as root, with the status page's
-settings; the master key read from `whoopy.env`, the token from stdin.
-Written and checked offline in 0.5.0~ynh1; needs the release and the upgrade.
-
-**Test:** after the upgrade, `sudo whoopy mcp add test
-http://127.0.0.1:<port>/mcp --token-stdin`: it answers at `/mcp/test` with a
-key; `update test --granted`: an ungranted key refused; `update test
---token-stdin`: a granted key still works; removed from the page. No token
-in `yunohost-cli.log` or in the shell history.
-
-### F-W-2 · the wake settings from the command line, read over MCP
-
-`doing` `small` `filed 2026-11-27`
-
-`whoopy settings` shows and changes them through the socket's
-`POST /settings`, with the page's checks; `/mcp/whoopy` gains a read-only
-`whoopy-settings`. Checked against a local daemon (refusals carry the
-daemon's reason, the open servers kept, the tool reads the same values).
-Needs the release and the upgrade: T-W-1, T-W-2, T-P-4, T-M-8.
-
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
 
 `todo` `large` `filed 2026-11-06`
@@ -100,6 +76,36 @@ Two ways, to be chosen:
   `LITELLM_OFFLINE_MODE`, with five action items. 1.110 is not worth it yet.
 
 ## Tests
+
+### T-W-1 · a request wakes the desktop
+
+`todo` `playtest` `reopened 2026-11-27`
+
+**Do:** `tests/wake-playtest.sh <ai server> ollama/<chat model>`, froaky's
+idle time lowered first. **Pass:** chat 200 from asleep, one resume, asleep
+again after its idle time.
+**Last:** 2026-11-26 at `42253e3`, 0.4.1~ynh2: chat 200 in 27 s, 1 resume,
+asleep after 113 s; `speaches/*` transcription 200 in 16 s. Reopened by the
+0.5.0 binary (`a4ca6df`), whose wake path did not change.
+
+### T-W-2 · a failed wake
+
+`todo` `playtest` `reopened 2026-11-27`
+
+**Do:** a made-up MAC and a 20 s timeout, then two requests. **Pass:** a 503
+after about 21 s, then one in 0 s with "a wake failed less than 15 s ago"; the
+settings restored. `whoopy settings` can now set and restore them.
+**Last:** 2026-11-26 at `42253e3`, 0.4.1~ynh2: 503 in 22 s, then 0 s; the
+open servers kept. Reopened by the 0.5.0 binary.
+
+### T-P-4 · the page's wake
+
+`todo` `playtest` `reopened 2026-11-27`
+
+**Do:** with the desktop asleep, `whoopy status`, `POST /whoopy/wake`, status
+again. **Pass:** asleep, `ok` once Ollama answers, then awake with the last
+wake. **Last:** 2026-11-26 at `42253e3`, 0.4.1~ynh2: `ok` in 11 s, asleep
+after 123 s. Reopened by the 0.5.0 binary.
 
 ### T-P-5 · the status page through the portal
 
@@ -173,15 +179,14 @@ the result is to the house rules.
 
 ## Closed
 
+- `F-M-17` done 2026-11-27 · `whoopy mcp list`, `add` and `update`, as root, the master key from `whoopy.env`, the token from a pipe, never a terminal (0.5.0~ynh1, released as `whoopy-0.5.0`, upgraded 2026-11-27): a `test` server added at `whoopy`'s own port answered at `/mcp/test` with 4 tools to an ungranted key; after `update --granted` that key was refused ("not allowed to access the requested MCP servers: test") and a granted key listed them; after `update --token-stdin` the granted key still did; an empty `update` and one on the package's `whoopy` refused; the server and both keys deleted
+- `F-W-2` done 2026-11-27 · `whoopy settings` shows and changes the wake settings through the socket's `POST /settings`, root only by the peer's uid; `whoopy-settings` reads them over MCP (0.5.0~ynh1): as user `whoopy` 403 "Only root may change the settings here.", as root the timeout changed and put back, a 5 s timeout refused with the daemon's reason, the open servers kept; `whoopy-settings` answered through LiteLLM
+- `T-M-8` done `playtest` 2026-11-27 at `f2d7dac` · 0.5.0~ynh1, on loopback: the daemon's MCP port 401 without its token; `/mcp/whoopy` with the master key lists `whoopy-models`, `whoopy-settings`, `whoopy-status`, `whoopy-wake`, and `whoopy-settings` answers. Not rerun through the domain
 - `F-M-16` done 2026-11-26 · the status page's Token button gives an MCP server a new token in place (`PUT /v1/mcp/server`, same `server_id`), so the keys granted it keep their grant (0.4.1~ynh5, upgraded 2026-11-26): through the portal the button took `web`'s current token, then a new one from `token --new`, and a granted key still searched through `/mcp/web`; against a stub in a browser at 390 and 1366 wide, the form sends `server_id`, `bearer_token` and the token, none for the package's server; `check_page.py` no fault at six sizes, signed out
 - `B-P-6` closed 2026-11-26 · LiteLLM's user reaches on loopback only DNS, PostgreSQL, Prisma's query engine (pinned to `port_engine`), `port_mcp` and the panel's `loopback_ports`, by an nftables table on its uid (0.4.1~ynh4, at `02ab67e`): as user `whoopy` 5432, 8790, 8770 and 8792 open, 389, 6379, 8384, 443 and `::1` refused in 2 ms; `docs`, `web`, `flambyno` and `whoopy` list their tools, `embeddinggemma` on 8771 embeds. 0.4.1~ynh3 without the pin crash-looped LiteLLM for about 10 minutes (Prisma's random port refused). The only refusals left are Prisma trying `::1` before 127.0.0.1
 - `T-P-1` done `playtest` 2026-11-26 at `02ab67e` · 0.4.1~ynh4 with the loopback table: through the domain `/v1/models` 401 without a token, 200 with; `/key/list` and `/v1/mcp/server` 302 to the portal even with a token. Migrations not rerun (an upgrade, not a first install)
-- `T-M-8` done `playtest` 2026-11-26 at `02ab67e` · 0.4.1~ynh4: `/mcp/whoopy` through the domain 401 without a token, no redirect; with the master key its 3 tools listed, status and models answer (the machine asleep); the daemon's loopback port 401 without its token. `whoopy-wake` not called, so as not to wake the desktop
 - `T-P-2` done 2026-11-26 at `02ab67e` · 0.4.1~ynh4: no download in the journal since start-up (the only URLs are LiteLLM's banner); the outbound rule unchanged since 2026-11-04, the pypi.org probe not rerun
-- `T-W-1` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2, from asleep each time: `tests/wake-playtest.sh <ai server> ollama/gemma4-e4b-qat-64k` chat 200 in 27 s, 1 resume, asleep after 113 s; `speaches/deepdml/faster-whisper-large-v3-turbo-ct2` transcription through the domain 200 in 16 s ("front, center."), 1 resume, asleep after about 7 min (Speaches holds its model 5 min). `speaches/Systran/faster-whisper-small` woke it too but 404: not installed on the AI server
-- `T-W-2` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2: 503 in 22 s "Ollama did not answer within 20 s", then 0 s with "a wake failed less than 15 s ago"; the settings restored with the open servers kept
 - `F-W-1` done 2026-11-26 · the hook wakes the AI server for any model on its host, not only Ollama's; the `speaches/*` database model on froaky's model routes transcribed through the domain (200, segments and language), the test from asleep is T-W-1
-- `T-P-4` done `playtest` 2026-11-26 at `42253e3` · 0.4.1~ynh2, `tests/wake-playtest.sh`: status "The AI server is asleep", the page's wake `ok` in 11 s, status awake with the last wake, asleep after 123 s
 - `F-P-10` done 2026-11-24 · the status page in the pokestyle look: Whoopy's dark palette, square pieces, the mascot header with the state as a chip (awake, waking, asleep, offline), LiteLLM links after Config with the new-page icon, the MCP servers beside the status from 75em; mascot and Fredoka served by nginx from `icons/` (0.4.0~ynh2, upgraded 2026-11-24): `check_page.py` no fault at six sizes on every tab against a stub in the up, waking and down states, offline only the stub's 500s, screenshots read; on the live daemon the same apart from the assets nginx serves; through the portal: T-P-5
 - `F-M-15` done 2026-11-24 · the status page opens each MCP server to the internet with a box and switches it between every key and granted keys; the panel chooses who may use `/mcp/whoopy` (all, granted, off); the open list sits in the daemon's file, checked by nginx through `auth_request` with SSOwat's pass replaced in that location (0.4.0~ynh1, released as `whoopy-0.4.0`, upgraded 2026-11-24; `web docs` carried over): T-M-10, T-M-8, T-W-1, T-W-2, T-P-4, T-P-3 passed; the page's boxes checked in a browser (T-M-11)
 - `T-M-10` done `playtest` 2026-11-24 at `a292199` · 0.4.0~ynh1, `web` and `docs` opened on the page (carried from the panel by the upgrade): from the off-site backup server through the domain, `/mcp/web` and `/mcp/docs` 401 without a key and list 2 and 7 tools with the master key; `/mcp/whoopy` 403 with it until its box was ticked (then 401 without a key, applied at once), 403 again once unticked; `/mcp`, `/mcp/sse`, `/mcp/proxy`, `/mcp/enabled`, `/mcp/web,whoopy`, `/mcp/web%2Cwhoopy`, `/mcp/web/x`, `/mcp/docs%2F..%2Fweb`, `/web/mcp`, `/mcp-rest`, `/v1/mcp/server`, `/ui/mcp/`, `/public/mcp_hub` 403, `/whoopy-mcp-public` 404; `/v1/models` 200. From the LAN over IPv4 and IPv6, every server lists its tools with a key and 401s without; `/key/list` and `/v1/mcp/server` sent to the portal
