@@ -17,7 +17,7 @@ Two entry points, because LiteLLM has two request paths:
 - model calls go through the router, which hands `async_pre_call_check` the
   deployment it picked. Only a deployment whose api_base is on the AI
   server's host wakes: Ollama, and any database model there, such as
-  `speaches/*` through froaky.
+  `froaky-speaches/*` through froaky.
 - a tool call reaches `async_pre_call_hook` as call_type "call_mcp_tool",
   and wakes only for a server in WAKE_MCP_SERVERS.
 

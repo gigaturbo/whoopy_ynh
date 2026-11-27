@@ -40,7 +40,7 @@ asleep, or out of reach (offline). `/` has three tabs and two links out:
 |---|---|
 | `ollama/<name>` | every chat model Ollama has |
 | `ollama-embed/<name>` | the same machine's embedding models, the ones Ollama marks as such |
-| `speaches/<id>` | Speaches' transcription and speech models, through froaky, once added as a database model (below) |
+| `froaky-speaches/<id>` | Speaches' transcription and speech models, through froaky, once added as a database model (below) |
 | anything else | the models added in LiteLLM's admin page (`/ui/`, Models) |
 
 While the AI server sleeps, `/v1/models` lists none of its models. A
@@ -72,7 +72,7 @@ opens its model routes only.
 ```bash
 curl http://127.0.0.1:<port>/model/new -H "Authorization: Bearer <master key>" \
   -H "Content-Type: application/json" -d '{
-    "model_name": "speaches/*",
+    "model_name": "froaky-speaches/*",
     "litellm_params": {"model": "openai/*",
       "api_base": "http://<ai server>:8970/api/speaches/v1",
       "api_key": "<froaky model token>"},
@@ -80,3 +80,8 @@ curl http://127.0.0.1:<port>/model/new -H "Authorization: Bearer <master key>" \
 ```
 
 Any model whose address is on the AI server's host wakes it, as Ollama's do.
+
+Keep the `froaky-` in the name. Speaches' model ids start with their owner,
+`speaches-ai/`, and LiteLLM 1.106.6 adds the route's prefix to a listed id
+only when the id does not already start with it. Under `speaches/*`, Kokoro
+and Piper were listed without it, under names no route matched.

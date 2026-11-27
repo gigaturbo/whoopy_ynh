@@ -14,21 +14,7 @@ runtime.
 
 ## Bugs
 
-### B-P-7 · the docs still name the Speaches route `speaches/*`
-
-`open` `small` `filed 2026-11-27`
-
-The database route to Speaches through froaky is now `froaky-speaches/*`.
-Under `speaches/*`, `/v1/models` listed Kokoro and Piper without the
-prefix: LiteLLM 1.106.6 (`get_known_models_from_wildcard`,
-`proxy/auth/model_checks.py:317`) adds it only when
-`model.startswith(prefix)` fails, a plain string test with no `/`, and
-their ids start `speaches-ai/`. A prefix must not begin any Hugging Face
-owner name.
-
-**Fix:** `doc/api.md` (the model table and the `POST /model/new` example)
-and the comment in `conf/whoopy_wake.py` name `froaky-speaches/*`. Close
-when no file names `speaches/` as the route.
+None open.
 
 ## Features
 
@@ -193,6 +179,7 @@ the result is to the house rules.
 
 ## Closed
 
+- `B-P-7` closed 2026-11-28 · the docs and the hook's comment name the Speaches route `froaky-speaches/*`, and `doc/api.md` says why the prefix must not begin an owner name: no file names `speaches/` as the route any more
 - `B-M-2` closed 2026-11-27 · the wake hook refuses with 403 a model request whose `tools` name an MCP server of the gateway, by LiteLLM's own `should_use_litellm_mcp_gateway`, whatever the origin (0.5.0~ynh2, upgraded 2026-11-27). Before: `/v1/responses` with a `litellm_proxy/mcp/docs` tool ran `docs-list_folder` and handed the model `docs`' write tools. After, master key on loopback: `/v1/responses`, `/v1/chat/completions` and `/v1/messages`, each with `litellm_proxy/mcp/docs` and `https://<domain>/mcp/docs`, 403 in under 1 s, background responses too, and through the domain from the LAN; the same routes without MCP tools 200. Not tried from outside the LAN: the refusal does not depend on the origin
 - `F-M-17` done 2026-11-27 · `whoopy mcp list`, `add` and `update`, as root, the master key from `whoopy.env`, the token from a pipe, never a terminal (0.5.0~ynh1, released as `whoopy-0.5.0`, upgraded 2026-11-27): a `test` server added at `whoopy`'s own port answered at `/mcp/test` with 4 tools to an ungranted key; after `update --granted` that key was refused ("not allowed to access the requested MCP servers: test") and a granted key listed them; after `update --token-stdin` the granted key still did; an empty `update` and one on the package's `whoopy` refused; the server and both keys deleted
 - `F-W-2` done 2026-11-27 · `whoopy settings` shows and changes the wake settings through the socket's `POST /settings`, root only by the peer's uid; `whoopy-settings` reads them over MCP (0.5.0~ynh1): as user `whoopy` 403 "Only root may change the settings here.", as root the timeout changed and put back, a 5 s timeout refused with the daemon's reason, the open servers kept; `whoopy-settings` answered through LiteLLM
