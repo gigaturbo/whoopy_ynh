@@ -16,6 +16,10 @@ token.
   user can write too: harmless, since LiteLLM already answers every outside
   call to `/v1` and holds every server's token. Whoever may open the status
   page (the install's admin group by default) may open a server.
+- **A model request cannot run MCP tools**: one whose `tools` name a server
+  of this gateway (`litellm_proxy/mcp/<name>`, or a URL ending in
+  `/mcp/<name>`) is refused with 403. LiteLLM would otherwise run that
+  server's tools itself, behind `/v1`, out of reach of the LAN rule.
 - **Other services on this machine are out of reach**: LiteLLM may connect
   only to its database, DNS, its own MCP server and the ports listed in the
   panel, not to LDAP, Redis, the YunoHost API or another app.

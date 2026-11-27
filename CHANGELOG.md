@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0~ynh2 (2026-11-27)
+
+- [x] **FIX** a model request can no longer run an MCP server's tools: MCP is reached at `/mcp/<name>` only, where the LAN rule applies
+
 ## 0.5.0~ynh1 (2026-11-27)
 
 - [x] **FEAT** `whoopy mcp list`, `add` and `update` manage LiteLLM's MCP servers from the command line, the token read from stdin

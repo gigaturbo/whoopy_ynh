@@ -26,6 +26,13 @@ the machine sleeps, its servers are missing from the list. And LiteLLM refuses
 a tool name it has never listed before any hook runs, so after a restart
 while the machine sleeps, a call fails until a listing succeeds.
 
+It refuses with 403 a model request whose `tools` name an MCP server of this
+gateway (`litellm_proxy/mcp/<name>`, or an http(s) URL ending in
+`/mcp/<name>`), whatever the caller: LiteLLM would list and run that server's
+tools itself, behind `/v1`, where nginx's LAN rule and open list never apply.
+MCP is reached at `/mcp/<name>` only. The test is LiteLLM's own, the one its
+three gateway routes use, so a new URL form stays covered.
+
 It sets the page's keep_alive on requests to the ollama/ and ollama-embed/
 routes that carry none, read from the daemon at most every KEEP_ALIVE_TTL.
 
@@ -47,6 +54,7 @@ from fastapi import HTTPException
 from litellm.exceptions import ServiceUnavailableError
 from litellm.integrations.custom_logger import CustomLogger
 from litellm.proxy.auth import model_checks
+from litellm.responses.mcp.litellm_proxy_mcp_handler import LiteLLM_Proxy_MCP_Handler
 
 OLLAMA_URL = os.environ.get("WHOOPY_OLLAMA_URL", "").rstrip("/")
 AI_HOST = urlsplit(OLLAMA_URL).hostname
@@ -159,6 +167,12 @@ class WakeOnLan(CustomLogger):
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
         if call_type != "call_mcp_tool":
+            tools = data.get("tools")
+            if isinstance(tools, list) and LiteLLM_Proxy_MCP_Handler.should_use_litellm_mcp_gateway(tools):
+                raise HTTPException(
+                    status_code=403,
+                    detail="MCP tools in a model request are refused here: call /mcp/<name> instead.",
+                )
             model = data.get("model")
             if isinstance(model, str) and model.startswith(OLLAMA_ROUTES) and "keep_alive" not in data:
                 keep_alive = await self._keep_alive_setting()

@@ -14,7 +14,10 @@ Bearer. A call without a token gets a 401, never the portal.
   token. Without it, only the keys granted that server: in LiteLLM's admin
   page, Virtual Keys, a key's MCP servers.
 
-The LLM API under `/v1` is not affected by either.
+The LLM API under `/v1` is not affected by either. It does not reach the
+MCP servers either: a model request whose `tools` name one (`{"type":
+"mcp", "server_url": "litellm_proxy/mcp/<name>"}`) is refused with 403. A
+client calls `/mcp/<name>` itself.
 
 **From the internet.** Away from home, either connect through the VPN, or
 tick the server's "From the internet" box. Then:
