@@ -1,5 +1,7 @@
-//! The MCP tools. None takes an argument: a steered model can wake the
-//! desktop, which a chat request does anyway, and read model names.
+//! The MCP tools. None takes an argument and none changes a setting: a
+//! steered model can wake the desktop, which a chat request does anyway, and
+//! read model names and the wake settings. Changing them is the page's and
+//! the CLI's.
 
 use std::sync::Arc;
 
@@ -9,7 +11,7 @@ use rmcp::{
     tool, tool_handler, tool_router,
 };
 
-use crate::{ollama::Ollama, wake::Waker};
+use crate::{ollama::Ollama, settings::Settings, wake::Waker};
 
 #[derive(Clone)]
 pub struct Tools {
@@ -72,6 +74,41 @@ impl Tools {
             None => text("The AI server is asleep or unreachable; use wake first.".into()),
         }
     }
+
+    #[tool(
+        description = "Show the wake settings: whether requests wake the AI server, \
+        its MAC and broadcast address, the wake timeout, how long a model stays loaded, \
+        and the MCP servers open from the internet. Read-only."
+    )]
+    async fn settings(&self) -> Result<CallToolResult, ErrorData> {
+        text(describe(&self.waker.settings()))
+    }
+}
+
+/// The settings in words, one per line; shared with the CLI.
+pub fn describe(s: &Settings) -> String {
+    let or_none = |v: &str, none: &str| match v {
+        "" => none.to_string(),
+        v => v.to_string(),
+    };
+    [
+        format!(
+            "Requests wake the AI server: {}",
+            if s.wol_enabled { "yes" } else { "no" }
+        ),
+        format!("MAC address: {}", or_none(&s.wol_mac, "none")),
+        format!("Broadcast address: {}", s.wol_broadcast),
+        format!("Wake timeout: {} s", s.wake_timeout_s),
+        format!(
+            "Model kept loaded: {}",
+            or_none(&s.keep_alive, "Ollama's own setting")
+        ),
+        format!(
+            "Open from the internet: {}",
+            or_none(&s.mcp_public.join(", "), "none")
+        ),
+    ]
+    .join("\n")
 }
 
 #[tool_handler]

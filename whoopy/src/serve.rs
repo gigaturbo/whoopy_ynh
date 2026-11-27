@@ -6,6 +6,7 @@
 //!   POST /wake    a wake asked for by hand; runs even when disabled
 //!   GET  /status  awake or not, waking, the last wake
 //!   GET  /settings  the wake settings; the hook reads keep_alive there
+//!   POST /settings  as the page's POST /whoopy/settings; root only, the CLI's
 //! /ensure and /wake answer 200 once Ollama answers, 503 when the wake fails.
 //!
 //! Page routes, behind the portal's main permission through nginx:
@@ -30,11 +31,12 @@ use std::{
 
 use axum::{
     Extension, Json, Router,
-    extract::{Request, State, rejection::JsonRejection},
+    extract::{ConnectInfo, Request, State, connect_info::Connected, rejection::JsonRejection},
     http::{HeaderMap, StatusCode, header},
     middleware::{self, Next},
     response::{IntoResponse, Response},
     routing::{get, post},
+    serve::IncomingStream,
 };
 use rmcp::transport::streamable_http_server::{
     StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
@@ -62,13 +64,13 @@ pub struct Mcp {
 pub struct Web {
     pub port: u16,
     pub page: PathBuf,
-    /// Where a change made on the page is saved.
-    pub settings: PathBuf,
 }
 
+/// `settings_file` is where a change made on the page or the CLI is saved.
 pub async fn run(
     waker: Shared,
     socket: &Path,
+    settings_file: PathBuf,
     mcp: Option<Mcp>,
     web: Option<Web>,
 ) -> Result<(), String> {
@@ -84,13 +86,19 @@ pub async fn run(
     // The hook runs as the same user; root (the panel) passes anyway.
     std::fs::set_permissions(socket, std::fs::Permissions::from_mode(0o600))
         .map_err(|e| format!("{}: {e}", socket.display()))?;
+    let file: Arc<Path> = settings_file.into();
     let local = Router::new()
         .route("/ensure", post(ensure))
         .route("/wake", post(wake))
         .route("/status", get(status))
-        .route("/settings", get(settings))
+        .route(
+            "/settings",
+            get(settings).merge(post(save_settings).layer(middleware::from_fn(require_root))),
+        )
+        .layer(Extension(Arc::clone(&file)))
         .with_state(Arc::clone(&waker));
-    let local = axum::serve(unix, local).with_graceful_shutdown(shutdown());
+    let local = axum::serve(unix, local.into_make_service_with_connect_info::<Peer>())
+        .with_graceful_shutdown(shutdown());
 
     // "whoopy: wake socket at" is what whoopy_start waits for in the log.
     let mut started = format!("whoopy: wake socket at {}", socket.display());
@@ -122,13 +130,8 @@ pub async fn run(
 
     let page = match web {
         None => None,
-        Some(Web {
-            port,
-            page,
-            settings: file,
-        }) => {
+        Some(Web { port, page }) => {
             let page: Arc<Path> = page.into();
-            let file: Arc<Path> = file.into();
             let app = Router::new()
                 .route("/", get(move || send_page(Arc::clone(&page))))
                 .route("/whoopy/status", get(status))
@@ -197,6 +200,34 @@ async fn require_token(State(token): State<Arc<str>>, req: Request, next: Next) 
         .unwrap_or("");
     if !same(given.as_bytes(), token.as_bytes()) {
         return StatusCode::UNAUTHORIZED.into_response();
+    }
+    next.run(req).await
+}
+
+/// Who is at the other end of the socket.
+#[derive(Clone)]
+struct Peer {
+    uid: Option<u32>,
+}
+
+impl Connected<IncomingStream<'_, UnixListener>> for Peer {
+    fn connect_info(stream: IncomingStream<'_, UnixListener>) -> Self {
+        Self {
+            uid: stream.io().peer_cred().ok().map(|c| c.uid()),
+        }
+    }
+}
+
+/// The socket's settings change is root's (the CLI under sudo). LiteLLM runs
+/// as the daemon's user and reaches the socket, but its sandbox keeps the
+/// settings file read-only: it must not change them through here either.
+async fn require_root(ConnectInfo(peer): ConnectInfo<Peer>, req: Request, next: Next) -> Response {
+    if peer.uid != Some(0) {
+        return (
+            StatusCode::FORBIDDEN,
+            "Only root may change the settings here.",
+        )
+            .into_response();
     }
     next.run(req).await
 }

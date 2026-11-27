@@ -1,5 +1,6 @@
-//! The page's settings: changed on the status page, applied at once, kept in
-//! a JSON file the daemon owns (WHOOPY_SETTINGS, in its StateDirectory).
+//! The page's settings: changed on the status page or by root's `whoopy
+//! settings`, applied at once, kept in a JSON file the daemon owns
+//! (WHOOPY_SETTINGS, in its StateDirectory).
 //!
 //! Not in the YunoHost panel: they only tune the wake, plus the MCP servers
 //! open to the internet. What guards Whoopy (outbound access, LAN ranges,

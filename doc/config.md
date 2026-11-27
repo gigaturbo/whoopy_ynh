@@ -24,6 +24,18 @@ these settings. They are kept in `/var/lib/whoopy/settings.json`, which
 Whoopy's backup carries, with the MCP servers opened to the internet on the
 MCP Servers tab (see [MCP servers](mcp.md)).
 
+The same settings from the command line, applied at once with the
+page's checks:
+
+```bash
+sudo /var/www/whoopy/bin/whoopy settings
+sudo /var/www/whoopy/bin/whoopy settings --on --mac aa:bb:cc:dd:ee:ff --timeout 120 --keep-alive 5m
+sudo /var/www/whoopy/bin/whoopy settings --off --keep-alive ""
+```
+
+With no option it shows them. Only root may change them there. `/mcp/whoopy`'s `whoopy-settings` tool shows
+them too, and changes nothing.
+
 ## The config panel
 
 Set a value from the command line, a key at a time:

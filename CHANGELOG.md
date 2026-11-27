@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0~ynh1 (unreleased)
+
+- [x] **FEAT** `whoopy mcp list`, `add` and `update` manage LiteLLM's MCP servers from the command line, the token read from stdin
+- [x] **FEAT** `whoopy settings` shows and changes the wake settings from the command line, with the page's checks
+- [x] **FEAT** `/mcp/whoopy` gains `whoopy-settings`, which shows the wake settings and changes nothing
+
 ## 0.4.1~ynh6 (2026-11-26)
 
 - [x] **FEAT** the model list shows Ollama's embedding models under `ollama-embed/` only, and its other models under `ollama/` only

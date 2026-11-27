@@ -52,7 +52,7 @@ curl https://<domain>/v1/chat/completions \
 
 - [API and access](doc/api.md): the paths, who reaches each, the model names
 - [Configuration](doc/config.md): the wake settings on the status page, the rest in the config panel
-- [MCP servers](doc/mcp.md): the tools at `/mcp/whoopy`, and adding others
+- [MCP servers](doc/mcp.md): the tools at `/mcp/whoopy`, and adding others from the page or the command line
 - [Security](doc/security.md): how the app is confined
 
 ## Latest release

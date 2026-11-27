@@ -49,8 +49,10 @@ the status page. From the internet: its box on the status page, as any other.
 | `whoopy-wake` | wakes the machine and waits for Ollama to answer |
 | `whoopy-status` | awake or asleep, models in memory, last wake |
 | `whoopy-models` | the models Ollama has |
+| `whoopy-settings` | the wake settings and the servers open from the internet |
 
-Only `whoopy-wake` wakes the machine.
+Only `whoopy-wake` wakes the machine. None changes a setting: that is the
+status page's and the command line's.
 
 ## Adding an MCP server
 
@@ -75,6 +77,31 @@ first. Both work from the LAN ranges only.
 It is then served at `/mcp/<name>`, its tools named `<server>-<tool>`. A
 server that runs on the AI server does not wake it: only `/mcp/whoopy`
 does.
+
+### From the command line
+
+On the server, as root. The command reads LiteLLM's master key from
+Whoopy's root-only env file; a token is read from stdin, never from the
+command line, which every local user can see.
+
+```bash
+sudo /var/www/whoopy/bin/whoopy mcp list
+read -rs t && printf '%s' "$t" | sudo /var/www/whoopy/bin/whoopy mcp add docs http://127.0.0.1:8770/mcp --token-stdin
+sudo /var/www/whoopy/bin/whoopy mcp update docs --granted
+read -rs t && printf '%s' "$t" | sudo /var/www/whoopy/bin/whoopy mcp update docs --token-stdin
+unset t
+```
+
+`read -rs` takes the token without showing it or writing it to a file; the
+command refuses a token typed straight at it.
+
+`add` uses the status page's settings: Streamable HTTP, a Bearer token if
+one is given, every key unless `--granted`. `update` changes only what it is
+given (`--url`, `--every-key` or `--granted`, `--token-stdin`), so the keys
+granted the server keep their grant. A loopback address gets a reminder of
+the loopback ports. The package's own server cannot be changed there.
+
+### With the API
 
 The same can be done with the API, as an admin, from the LAN ranges:
 

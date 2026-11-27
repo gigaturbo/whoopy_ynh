@@ -18,6 +18,30 @@ None open.
 
 ## Features
 
+### F-M-17 · manage MCP servers from the command line
+
+`doing` `small` `filed 2026-11-27`
+
+`whoopy mcp list`, `add` and `update`, as root, with the status page's
+settings; the master key read from `whoopy.env`, the token from stdin.
+Written and checked offline in 0.5.0~ynh1; needs the release and the upgrade.
+
+**Test:** after the upgrade, `sudo whoopy mcp add test
+http://127.0.0.1:<port>/mcp --token-stdin`: it answers at `/mcp/test` with a
+key; `update test --granted`: an ungranted key refused; `update test
+--token-stdin`: a granted key still works; removed from the page. No token
+in `yunohost-cli.log` or in the shell history.
+
+### F-W-2 · the wake settings from the command line, read over MCP
+
+`doing` `small` `filed 2026-11-27`
+
+`whoopy settings` shows and changes them through the socket's
+`POST /settings`, with the page's checks; `/mcp/whoopy` gains a read-only
+`whoopy-settings`. Checked against a local daemon (refusals carry the
+daemon's reason, the open servers kept, the tool reads the same values).
+Needs the release and the upgrade: T-W-1, T-W-2, T-P-4, T-M-8.
+
 ### F-M-1 · a Tandoor recipe tool server behind `/mcp/tandoor`
 
 `todo` `large` `filed 2026-11-06`
